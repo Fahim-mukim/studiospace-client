@@ -26,6 +26,7 @@ const navigation = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [activeHash, setActiveHash] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const updateHash = () => setActiveHash(window.location.hash);
@@ -122,7 +123,7 @@ export function SiteHeader() {
           <div className="max-[360px]:hidden">
             <ThemeToggle />
           </div>
-          <Sheet>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button
                 aria-label="Open navigation menu"
@@ -136,6 +137,7 @@ export function SiteHeader() {
             <SheetContent
               aria-describedby={undefined}
               className="w-[min(22rem,88vw)]"
+              onEscapeKeyDown={() => setMobileMenuOpen(false)}
               side="right"
             >
               <SheetHeader className="border-b border-border pb-5">

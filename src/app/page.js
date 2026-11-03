@@ -26,10 +26,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   bookingSteps,
-  featuredStudios,
   hostAssurances,
   studioCategories,
 } from "@/data/homepage";
+import { featuredStudios } from "@/data/studios";
 
 export const metadata = {
   title: "Creative studio spaces for every idea",
@@ -100,8 +100,15 @@ export default function Home() {
               className="mx-auto mt-3 max-w-5xl text-center text-xs text-muted-foreground"
               id="studio-search-note"
             >
-              Search is coming with Explore Studios. For now, browse the
-              featured spaces below.
+              Search sample listings on{" "}
+              <Link
+                className="font-semibold text-primary underline-offset-4 hover:underline"
+                href="/studios"
+              >
+                Explore Studios
+              </Link>
+              . The homepage quick-search will connect when live listings are
+              available.
             </p>
           </Container>
         </section>

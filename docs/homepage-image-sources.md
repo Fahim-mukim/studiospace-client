@@ -29,14 +29,17 @@ not imply that a pictured person, venue, or brand endorses StudioSpace.
 
 ## Temporary demonstration data
 
-The homepage fixture data in `src/data/homepage.js` is illustrative only.
-Featured studio names, locations, capacities, hourly rates, category labels,
-ratings, and review counts are not live listings, verified reviews, or booking
-availability. The hero slides, category labels, booking steps, and host-support
-copy are also static presentation content.
+The canonical studio fixture data in `src/data/studios.js` is illustrative
+only. Featured and Explore Studios names, locations, capacities, hourly rates,
+category labels, ratings, review counts, host profiles, reviews, and detail
+descriptions are not live listings, verified reviews, or booking availability.
+The hero slides, category labels, booking steps, and host-support copy are also
+static presentation content.
 
-Explore Studio results, studio details, user-created studio listings, reviews
-and ratings, and bookings are not connected to MongoDB or an Express API.
-There is no persistence or booking behavior in this client milestone. The
+Explore Studio results and studio details are fixture-backed and are not
+connected to MongoDB or an Express API. The booking dialog is a non-persistent
+UI preview only; it does not check availability, submit a booking, or process
+payment. User-created listings and verified reviews are not implemented. The
 target remains an independently deployed Next.js client calling the separate
-Express REST API, backed by MongoDB; database integration is pending.
+Express REST API, backed by MongoDB; database and booking integration are
+pending.
