@@ -4,13 +4,16 @@ import {
   ArrowRight,
   ArrowUpRight,
   Camera,
+  BadgeCheck,
   Clapperboard,
-  Lightbulb,
+  Headset,
+  ShieldCheck,
   MapPin,
   Mic2,
   Music2,
   Search,
   UsersRound,
+  Wrench,
 } from "lucide-react";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 import { StudioCard } from "@/components/home/studio-card";
@@ -35,11 +38,11 @@ export const metadata = {
 };
 
 const categoryIcons = {
-  photography: Camera,
-  "film-video": Clapperboard,
-  podcast: Mic2,
-  music: Music2,
-  events: UsersRound,
+  "photo-studios": Camera,
+  "sound-stages": Clapperboard,
+  "podcast-rooms": Mic2,
+  "music-suites": Music2,
+  "art-workshops": UsersRound,
 };
 
 export default function Home() {
@@ -141,8 +144,7 @@ export default function Home() {
                   <Link
                     aria-label={`Explore ${category.title}: ${category.description}`}
                     className={`group relative isolate overflow-hidden rounded-2xl bg-foreground text-white focus-visible:outline-offset-4 sm:rounded-[1.5rem] ${layout}`}
-                    href={`/#category-${category.slug}`}
-                    id={`category-${category.slug}`}
+                    href={`/studios?category=${category.slug}`}
                     key={category.slug}
                     prefetch={false}
                   >
@@ -192,7 +194,7 @@ export default function Home() {
             <SectionHeader
               action={
                 <Button asChild className="self-start" variant="outline">
-                  <Link href="/#studios" prefetch={false}>
+                  <Link href="/studios" prefetch={false}>
                     Explore Studios
                     <ArrowRight aria-hidden="true" />
                   </Link>
@@ -317,13 +319,13 @@ export default function Home() {
                     <div className="flex items-start gap-3">
                       <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-primary">
                         {index === 0 ? (
-                          <Lightbulb aria-hidden="true" className="size-4" />
+                          <ShieldCheck aria-hidden="true" className="size-4" />
                         ) : index === 1 ? (
-                          <ArrowRight aria-hidden="true" className="size-4" />
+                          <BadgeCheck aria-hidden="true" className="size-4" />
                         ) : index === 2 ? (
-                          <MapPin aria-hidden="true" className="size-4" />
+                          <Wrench aria-hidden="true" className="size-4" />
                         ) : (
-                          <Camera aria-hidden="true" className="size-4" />
+                          <Headset aria-hidden="true" className="size-4" />
                         )}
                       </span>
                       <div>
@@ -337,9 +339,11 @@ export default function Home() {
                 ))}
             </ul>
             <p className="mt-5 rounded-xl border border-border bg-card px-4 py-3 text-sm leading-6 text-muted-foreground">
-              Listings, bookings, host protections, and creator-support
-              services are not live yet. Their terms will be published before
-              any booking service opens.
+              Liability protection, verified profiles, equipment safety
+              services, and 24/7 host support are intended assurances, not
+              services that are currently operational. Their terms will be
+              published before any booking service opens. The booking steps
+              above describe a planned flow; booking is not available yet.
             </p>
             <Button asChild className="mt-6" variant="outline">
               <Link href="/#host-guarantee" prefetch={false}>
@@ -362,7 +366,7 @@ export default function Home() {
                 </h2>
               </div>
               <Button asChild className="shrink-0 self-start sm:self-auto" size="lg">
-                <Link href="/#studios" prefetch={false}>
+                <Link href="/studios" prefetch={false}>
                   Explore Studios
                   <ArrowUpRight aria-hidden="true" />
                 </Link>

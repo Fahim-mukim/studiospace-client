@@ -21,7 +21,7 @@ demonstration, not a live backend capability.
 |---|---|---|---|
 | StudioSpace logo | Implemented | `src/components/site-header.jsx`, `src/components/brand/studiospace-logo.jsx` | None |
 | Home navigation | Implemented | `src/components/site-header.jsx` | None |
-| Explore Studios navigation | Partial | `src/components/site-header.jsx`, `src/app/page.js` | Links to featured section; full Explore Studios route and filters belong to Explore Studios milestone |
+| Explore Studios navigation | Partial | `src/components/site-header.jsx`, `src/app/page.js`, `src/components/home/hero-copy.jsx`, `src/components/site-footer.jsx` | Links now target `/studios`; route and filters remain deferred to Phase 3 |
 | How It Works navigation | Implemented | `src/components/site-header.jsx`, `src/app/page.js` | None |
 | Independent About Us navigation | Implemented | `src/components/site-header.jsx`, `src/app/page.js` | None |
 | Login and Register while unauthenticated | Partial | `src/components/site-header.jsx` | Links are present; account routes/auth are not implemented and belong to Authentication milestone |
@@ -37,8 +37,8 @@ demonstration, not a live backend capability.
 | At least three interactive Swiper slides | Implemented | `src/components/home/interactive-hero.jsx`, `src/data/homepage.js` | None |
 | Relevant studio photography | Implemented | `public/images/hero/`, `docs/homepage-image-sources.md` | None |
 | Hero headline and subtext | Implemented | `src/components/home/hero-copy.jsx` | None |
-| Explore Studios CTA | Partial | `src/components/home/hero-copy.jsx` | Navigates to featured homepage section; full Explore route is for Explore Studios milestone |
-| Host Your Space CTA | Partial | `src/components/home/hero-copy.jsx`, `src/app/page.js` | Navigates to host information; host onboarding is not available and belongs to Host Listing milestone |
+| Explore Studios CTA | Partial | `src/components/home/hero-copy.jsx`, `src/app/page.js` | Hero and homepage Explore Studios CTAs target `/studios`; page is deferred to Phase 3 |
+| Host Your Space CTA | Partial | `src/components/home/hero-copy.jsx`, `src/components/site-header.jsx`, `src/components/site-footer.jsx`, `src/app/page.js` | All target `/#host-guarantee` provisionally; host onboarding is not available |
 | Exactly six featured studio cards | Implemented | `src/app/page.js`, `src/data/homepage.js` | Current cards are static demonstrations; dynamic retrieval is pending Backend Integration |
 | Category badge per studio | Implemented | `src/components/home/studio-card.jsx` | None |
 | Studio title per card | Implemented | `src/components/home/studio-card.jsx` | None |
@@ -46,10 +46,10 @@ demonstration, not a live backend capability.
 | Rating per card | Partial | `src/components/home/studio-card.jsx`, `src/data/homepage.js` | Display is implemented using illustrative values; verified ratings are pending Backend Integration |
 | Location per card | Implemented | `src/components/home/studio-card.jsx` | None |
 | View Details per card | Partial | `src/components/home/studio-card.jsx`, `src/app/not-found.jsx` | Destination is not implemented; studio detail route belongs to Explore Studios milestone |
-| Five studio categories | Implemented | `src/app/page.js`, `src/data/homepage.js` | None |
-| Four booking workflow steps | Implemented | `src/app/page.js`, `src/data/homepage.js` | Booking execution is pending Backend Integration |
+| Five studio categories and query destinations | Partial | `src/app/page.js`, `src/components/site-footer.jsx`, `src/data/homepage.js` | Exact labels/slugs and `/studios?category=<slug>` links are implemented; destination is deferred to Phase 3 |
+| Four booking workflow steps with required titles | Partial | `src/app/page.js`, `src/data/homepage.js` | Exact titles are displayed as an intended flow only; booking execution is pending Backend Integration |
 | About StudioSpace identity, purpose, and community | Implemented | `src/app/page.js` | None |
-| Separate Host Guarantee & Creator Support section | Partial | `src/app/page.js`, `src/data/homepage.js` | Informational preview is distinct; actual protections/support policies must be finalized before bookings launch |
+| Separate Host Guarantee & Creator Support with four named assurances | Partial | `src/app/page.js`, `src/data/homepage.js` | Liability Protection, Verified Profiles, Equipment Safety, and 24/7 Host Support are presented as intentions, not operational services |
 | Search widget behavior | Partial | `src/app/page.js` | Search controls are visibly disabled until the Explore Studios/API milestone |
 
 ## Footer
@@ -59,10 +59,10 @@ demonstration, not a live backend capability.
 | StudioSpace branding and mission | Implemented | `src/components/site-footer.jsx` | None |
 | Copyright and terms notice | Partial | `src/components/site-footer.jsx` | Notice is present; publish approved terms/legal page before bookings launch |
 | Quick navigation | Implemented | `src/components/site-footer.jsx` | Account destinations await Authentication milestone |
-| Popular categories | Implemented | `src/components/site-footer.jsx`, `src/data/homepage.js` | Links navigate to category cards; result filtering belongs to Explore Studios milestone |
+| Popular categories | Partial | `src/components/site-footer.jsx`, `src/data/homepage.js` | Links use `/studios?category=<slug>`; category results are deferred to Phase 3 |
 | Newsletter input | Partial | `src/components/site-footer.jsx` | Input is intentionally disabled; connect an approved newsletter service before enabling |
-| Social links | Missing | `src/components/site-footer.jsx` | Official profile URLs were not present in the repository; configure approved accounts during Brand Launch |
-| New X logo rather than Twitter bird | Implemented | `src/components/site-footer.jsx` | X mark is shown as “coming soon”; official profile URL is still needed |
+| Social links | Missing | `src/components/site-footer.jsx` | No official profile URLs were provided; the footer transparently shows the X profile as coming soon and invents no URLs |
+| New X branding rather than Twitter bird | Implemented | `src/components/site-footer.jsx` | X mark is shown as “coming soon”; actual social links remain Missing |
 
 ## UI quality and data
 
@@ -93,15 +93,54 @@ bookings are not connected to an API or database. See
 `docs/homepage-image-sources.md` for the fuller disclosure and image
 provenance.
 
+## Phase 2.1 category mapping
+
+The client uses the required query identifiers now. To keep client/server
+integration predictable, the proposed future server enum values use the same
+canonical lowercase kebab-case strings. This is a recommended mapping, not a
+verified server contract; the separate server repository was not inspected or
+changed in this client-only milestone.
+
+| Homepage label | Frontend query identifier | Proposed future server category value |
+|---|---|---|
+| Photo Studios | `photo-studios` | `photo-studios` |
+| Sound Stages | `sound-stages` | `sound-stages` |
+| Podcast Rooms | `podcast-rooms` | `podcast-rooms` |
+| Music Suites | `music-suites` | `music-suites` |
+| Art Workshops | `art-workshops` | `art-workshops` |
+
+Category cards and footer category links use
+`/studios?category=<frontend-query-identifier>`. The values must be confirmed
+against the server API contract during Backend Integration.
+
+## Host CTA destination assumption
+
+The Host Your Space CTA destination remains ambiguous: the original hero
+requirement references `/studios`, while the private `/add-studio` route would
+imply a host-listing flow that does not exist yet. For this preview, every Host
+Your Space link consistently targets `/#host-guarantee`, the informational
+section only. No redirect, authentication flow, or onboarding is implemented.
+Confirm the eventual destination before Phase 3 host onboarding.
+
+## Submission documentation
+
+The client `README.md` is still the generic create-next-app template and needs
+a StudioSpace-specific update before submission. It was intentionally not
+changed in this correction milestone.
+
 ## Verification
 
-`npm run lint` and `npm run build` passed. Production browser checks confirmed
-the desktop and mobile navigation, active About Us state, distinct About and
-host sections, three-slide carousel navigation, six complete demo cards, five
-categories, four workflow steps, theme toggle, disabled newsletter controls,
-and 14 loaded images. No horizontal overflow was found at CSS widths 320,
-360, 390, 768, 820, 900, 1024, and 1440. `/studios` intentionally returned a
-branded 404 because Explore Studios is deferred. No hydration or runtime
-JavaScript errors were observed; the browser did report Next.js font/hero
-preload advisories and the expected 404 response during the deferred-route
-check.
+`npm run lint` and `npm run build` passed after the Phase 2.1 corrections.
+Production browser checks confirmed the exact four assurance headings and
+non-operational disclaimer; About StudioSpace remains separate; the five
+required category labels and all category-card/footer query URLs match their
+slugs; all four booking titles are present; Navbar, hero, and footer Explore
+Studios links target `/studios`; and all Host Your Space links use the
+provisional `/#host-guarantee` destination. The three-slide carousel advanced,
+the mobile menu and theme toggle worked, six studio cards remained present,
+and 14 local images loaded. No horizontal overflow was found at CSS widths
+320, 360, 390, 768, 820, 900, 1024, or 1440. No hydration errors were
+observed. `/studios?category=photo-studios` returned the expected branded 404
+because the Explore Studios page is deferred to Phase 3. Next.js emitted
+font-preload warnings in the browser; no application runtime errors were
+observed.

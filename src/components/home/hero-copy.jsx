@@ -26,7 +26,7 @@ export function HeroCopy() {
           className="bg-white text-foreground hover:bg-white/90"
           size="lg"
         >
-          <Link href="/#studios" prefetch={false}>
+          <Link href="/studios" prefetch={false}>
             Explore Studios
             <ArrowRight aria-hidden="true" />
           </Link>

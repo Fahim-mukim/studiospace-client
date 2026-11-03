@@ -15,39 +15,39 @@ export const heroSlides = [
 
 export const studioCategories = [
   {
-    slug: "photography",
-    title: "Photography",
+    slug: "photo-studios",
+    title: "Photo Studios",
     image: "/images/categories/photography.jpg",
     imageAlt: "Camera and lenses laid out for a photo shoot",
     description: "Daylight studios, portrait rooms, and more",
   },
   {
-    slug: "film-video",
-    title: "Film & video",
+    slug: "sound-stages",
+    title: "Sound Stages",
     image: "/images/categories/film.jpg",
-    imageAlt: "A clapperboard held on a film set",
-    description: "Production spaces for stories in motion",
+    imageAlt: "A clapperboard on a production set",
+    description: "Production stages for film, video, and sound",
   },
   {
-    slug: "podcast",
-    title: "Podcasting",
+    slug: "podcast-rooms",
+    title: "Podcast Rooms",
     image: "/images/categories/podcast.jpg",
     imageAlt: "A studio microphone ready for recording",
-    description: "Quiet rooms made for good conversation",
+    description: "Quiet, equipped rooms made for good conversation",
   },
   {
-    slug: "music",
-    title: "Music",
+    slug: "music-suites",
+    title: "Music Suites",
     image: "/images/categories/music.jpg",
     imageAlt: "Instruments and recording equipment in a music room",
-    description: "Rehearsal rooms, studios, and stages",
+    description: "Rehearsal rooms and recording studios",
   },
   {
-    slug: "events",
-    title: "Events",
+    slug: "art-workshops",
+    title: "Art Workshops",
     image: "/images/categories/events.jpg",
-    imageAlt: "A creative gathering inside a bright event venue",
-    description: "Distinctive spaces for bringing people together",
+    imageAlt: "A bright, open space ready for a creative workshop",
+    description: "Open, flexible spaces for hands-on creative work",
   },
 ];
 
@@ -56,7 +56,7 @@ export const featuredStudios = [
     slug: "the-daylight-loft",
     name: "The Daylight Loft",
     location: "Brooklyn, New York",
-    category: "Photography",
+    category: "Photo Studios",
     image: "/images/studios/daylight-loft.jpg",
     imageAlt: "Open, daylight-filled creative workspace",
     detail: "Natural light",
@@ -69,7 +69,7 @@ export const featuredStudios = [
     slug: "northline-sound",
     name: "Northline Sound",
     location: "Hackney, London",
-    category: "Podcasting",
+    category: "Podcast Rooms",
     image: "/images/studios/northline-sound.jpg",
     imageAlt: "Close-up of a studio microphone and pop filter",
     detail: "Recording room",
@@ -82,7 +82,7 @@ export const featuredStudios = [
     slug: "atelier-12",
     name: "Atelier 12",
     location: "Copenhagen, Denmark",
-    category: "Photography",
+    category: "Photo Studios",
     image: "/images/studios/atelier-12.jpg",
     imageAlt: "A light-filled lounge and flexible studio setting",
     detail: "Flexible layout",
@@ -95,7 +95,7 @@ export const featuredStudios = [
     slug: "the-vocal-room",
     name: "The Vocal Room",
     location: "Los Angeles, California",
-    category: "Music",
+    category: "Music Suites",
     image: "/images/studios/the-vocal-room.jpg",
     imageAlt: "A vocalist performing under soft stage lights",
     detail: "Session space",
@@ -108,7 +108,7 @@ export const featuredStudios = [
     slug: "the-cut-room",
     name: "The Cut Room",
     location: "Toronto, Canada",
-    category: "Film & video",
+    category: "Sound Stages",
     image: "/images/studios/the-cut-room.jpg",
     imageAlt: "A video editor's timeline on a production monitor",
     detail: "Post-production",
@@ -121,7 +121,7 @@ export const featuredStudios = [
     slug: "the-foundry",
     name: "The Foundry",
     location: "Portland, Oregon",
-    category: "Events",
+    category: "Art Workshops",
     image: "/images/studios/the-foundry.jpg",
     imageAlt: "A bright event hall set up for a creative gathering",
     detail: "Gathering space",
@@ -135,49 +135,49 @@ export const featuredStudios = [
 export const bookingSteps = [
   {
     number: "01",
-    title: "Find your kind of space",
+    title: "Discover Spaces",
     description:
-      "Start with the work you want to make, then explore spaces that fit the brief.",
+      "Explore spaces suited to the kind of creative work you want to make.",
   },
   {
     number: "02",
-    title: "Get into the details",
+    title: "Select Shoot Hours",
     description:
-      "Compare the setup, capacity, and practical details before you decide.",
+      "Choose the hours your shoot, recording, or session will need.",
   },
   {
     number: "03",
-    title: "Connect with the host",
+    title: "Book Instantly",
     description:
-      "Ask the questions that help you plan a smooth, productive session.",
+      "The planned booking flow will make confirming a chosen space straightforward.",
   },
   {
     number: "04",
-    title: "Make something real",
+    title: "Create & Produce",
     description:
-      "Choose a space that feels right and bring your next idea to life.",
+      "Bring your team together and put your next idea into production.",
   },
 ];
 
 export const hostAssurances = [
   {
-    title: "Space for every point of view",
+    title: "Liability Protection",
     description:
-      "Explore characterful rooms, useful setups, and spaces with their own story.",
+      "A protection offering is planned for hosts and creators; coverage and terms are not yet available.",
   },
   {
-    title: "The details, up front",
+    title: "Verified Profiles",
     description:
-      "Clear descriptions help you understand a space before you reach out.",
+      "Profile verification is an intended trust feature and is not currently operational.",
   },
   {
-    title: "A direct line to the host",
+    title: "Equipment Safety",
     description:
-      "Share your plans and ask about the details that matter to your project.",
+      "Clear equipment details and safe-use guidance are planned; no inspection program is active yet.",
   },
   {
-    title: "Made with creatives in mind",
+    title: "24/7 Host Support",
     description:
-      "Find places for photo shoots, recordings, rehearsals, and gatherings.",
+      "Around-the-clock host support is a future goal and is not currently available.",
   },
 ];

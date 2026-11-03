@@ -8,7 +8,7 @@ import { studioCategories } from "@/data/homepage";
 
 const quickLinks = [
   { href: "/", label: "Home" },
-  { href: "/#studios", label: "Explore Studios" },
+  { href: "/studios", label: "Explore Studios" },
   { href: "/#how-it-works", label: "How It Works" },
   { href: "/#about", label: "About Us" },
   { href: "/login", label: "Login" },
@@ -72,7 +72,7 @@ export function SiteFooter() {
                 <li key={category.slug}>
                   <Link
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    href={`/#category-${category.slug}`}
+                    href={`/studios?category=${category.slug}`}
                     prefetch={false}
                   >
                     {category.title}
