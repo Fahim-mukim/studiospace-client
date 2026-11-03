@@ -13,7 +13,7 @@ const quickLinks = [
   { href: "/#about", label: "About Us" },
   { href: "/login", label: "Login" },
   { href: "/register", label: "Register" },
-  { href: "/#host-guarantee", label: "Host Your Space" },
+  { href: "/studios", label: "Host Your Space" },
 ];
 
 function XMark() {
@@ -115,7 +115,7 @@ export function SiteFooter() {
           </p>
           <Link
             className="inline-flex items-center gap-1 font-medium text-foreground"
-            href="/#host-guarantee"
+            href="/studios"
             prefetch={false}
           >
             Host Your Space

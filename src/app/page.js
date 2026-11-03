@@ -346,7 +346,7 @@ export default function Home() {
               above describe a planned flow; booking is not available yet.
             </p>
             <Button asChild className="mt-6" variant="outline">
-              <Link href="/#host-guarantee" prefetch={false}>
+              <Link href="/studios" prefetch={false}>
                 Host Your Space
                 <ArrowRight aria-hidden="true" />
               </Link>

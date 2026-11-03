@@ -114,7 +114,7 @@ export function SiteHeader() {
               Register
             </Link>
             <Button asChild size="sm">
-              <Link href="/#host-guarantee" prefetch={false}>
+              <Link href="/studios" prefetch={false}>
                 Host Your Space
               </Link>
             </Button>
@@ -197,7 +197,7 @@ export function SiteHeader() {
               <div className="mt-auto p-4">
                 <SheetClose asChild>
                   <Button asChild className="w-full">
-                    <Link href="/#host-guarantee" prefetch={false}>
+                    <Link href="/studios" prefetch={false}>
                       Host Your Space
                     </Link>
                   </Button>

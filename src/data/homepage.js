@@ -45,8 +45,8 @@ export const studioCategories = [
   {
     slug: "art-workshops",
     title: "Art Workshops",
-    image: "/images/categories/events.jpg",
-    imageAlt: "A bright, open space ready for a creative workshop",
+    image: "/images/categories/art-workshops.jpg",
+    imageAlt: "Paint-splattered worktables and supplies in an art studio",
     description: "Open, flexible spaces for hands-on creative work",
   },
 ];
@@ -123,8 +123,8 @@ export const featuredStudios = [
     location: "Portland, Oregon",
     category: "Art Workshops",
     image: "/images/studios/the-foundry.jpg",
-    imageAlt: "A bright event hall set up for a creative gathering",
-    detail: "Gathering space",
+    imageAlt: "An easel, brushes, and art supplies in a studio workspace",
+    detail: "Art workspace",
     capacity: "Up to 40",
     rate: "$140",
     rating: "4.8",

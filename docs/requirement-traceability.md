@@ -35,10 +35,10 @@ demonstration, not a live backend capability.
 | Requirement | Status | Supporting files | Remaining work / milestone |
 |---|---|---|---|
 | At least three interactive Swiper slides | Implemented | `src/components/home/interactive-hero.jsx`, `src/data/homepage.js` | None |
-| Relevant studio photography | Implemented | `public/images/hero/`, `docs/homepage-image-sources.md` | None |
+| Relevant studio photography | Implemented | `public/images/hero/`, `public/images/categories/art-workshops.jpg`, `public/images/studios/`, `src/data/homepage.js`, `docs/homepage-image-sources.md` | Art Workshops and The Foundry use local, visually relevant workshop/studio photos; all featured listing imagery is illustrative, not verified venue photography |
 | Hero headline and subtext | Implemented | `src/components/home/hero-copy.jsx` | None |
 | Explore Studios CTA | Partial | `src/components/home/hero-copy.jsx`, `src/app/page.js` | Hero and homepage Explore Studios CTAs target `/studios`; page is deferred to Phase 3 |
-| Host Your Space CTA | Partial | `src/components/home/hero-copy.jsx`, `src/components/site-header.jsx`, `src/components/site-footer.jsx`, `src/app/page.js` | All target `/#host-guarantee` provisionally; host onboarding is not available |
+| Host Your Space CTA | Partial | `src/components/home/hero-copy.jsx`, `src/components/site-header.jsx`, `src/components/site-footer.jsx`, `src/app/page.js` | All target `/studios` as required for this milestone; the Explore Studios route is deferred to Phase 3 and host onboarding is not available |
 | Exactly six featured studio cards | Implemented | `src/app/page.js`, `src/data/homepage.js` | Current cards are static demonstrations; dynamic retrieval is pending Backend Integration |
 | Category badge per studio | Implemented | `src/components/home/studio-card.jsx` | None |
 | Studio title per card | Implemented | `src/components/home/studio-card.jsx` | None |
@@ -113,14 +113,15 @@ Category cards and footer category links use
 `/studios?category=<frontend-query-identifier>`. The values must be confirmed
 against the server API contract during Backend Integration.
 
-## Host CTA destination assumption
+## Host CTA destination
 
-The Host Your Space CTA destination remains ambiguous: the original hero
-requirement references `/studios`, while the private `/add-studio` route would
-imply a host-listing flow that does not exist yet. For this preview, every Host
-Your Space link consistently targets `/#host-guarantee`, the informational
-section only. No redirect, authentication flow, or onboarding is implemented.
-Confirm the eventual destination before Phase 3 host onboarding.
+The original assignment explicitly requires the Hero Explore Studios and Host
+Your Space CTAs to target `/studios`. The Hero, header (desktop and mobile),
+footer quick link, footer CTA, and Host Guarantee section CTA all use that
+destination. The Explore Studios route remains deferred to Phase 3; no
+authentication, redirect, or host onboarding is implemented. The Host
+Guarantee section remains separate informational content at
+`id="host-guarantee"` and is not a Host Your Space action destination.
 
 ## Submission documentation
 
@@ -130,17 +131,24 @@ changed in this correction milestone.
 
 ## Verification
 
-`npm run lint` and `npm run build` passed after the Phase 2.1 corrections.
-Production browser checks confirmed the exact four assurance headings and
-non-operational disclaimer; About StudioSpace remains separate; the five
-required category labels and all category-card/footer query URLs match their
-slugs; all four booking titles are present; Navbar, hero, and footer Explore
-Studios links target `/studios`; and all Host Your Space links use the
-provisional `/#host-guarantee` destination. The three-slide carousel advanced,
-the mobile menu and theme toggle worked, six studio cards remained present,
-and 14 local images loaded. No horizontal overflow was found at CSS widths
-320, 360, 390, 768, 820, 900, 1024, or 1440. No hydration errors were
-observed. `/studios?category=photo-studios` returned the expected branded 404
-because the Explore Studios page is deferred to Phase 3. Next.js emitted
-font-preload warnings in the browser; no application runtime errors were
-observed.
+`docs/homepage-image-sources.md` records the new local Art Workshops and
+Foundry image files, their Unsplash photo pages, and the Unsplash License.
+Static listings remain temporary demonstration data; their identities and
+details do not describe verified venues or people pictured in stock images.
+The `events.jpg` asset is retained but no longer used for Art Workshops.
+
+Phase 2.2 verification: `npm run lint` and `npm run build` passed. Production
+browser checks confirmed the Hero Host Your Space link navigates to `/studios`;
+all desktop, Hero, footer, and mobile-menu Host Your Space links use that same
+destination. Explore Studios links remain `/studios`, and all five category
+links and footer category links retain their required query slugs. The Hero
+slider advanced from slide 1 of 3 to slide 2 of 3; the light/dark toggle and
+mobile menu open/close controls worked. About StudioSpace and Host Guarantee
+remain separate sections; six featured cards, four booking titles, and all
+four assurance headings are present. All 14 local homepage images loaded,
+including the two updated workshop images. No horizontal overflow was found
+at CSS viewport widths 320, 360, 390, 768, 820, 1024, or 1440. No homepage
+HTTP errors, browser console errors, or page errors were observed. `/studios`
+still renders the branded 404 because Explore Studios is deferred to Phase 3.
+Next.js emitted font and hero-image preload advisories; no runtime or
+hydration errors were observed.

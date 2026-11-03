@@ -33,7 +33,7 @@ export function HeroCopy() {
         </Button>
         <Link
           className="rounded-xl px-4 py-3 text-sm font-semibold text-white underline decoration-white/50 underline-offset-4 transition-colors hover:decoration-white focus-visible:outline-white"
-          href="/#host-guarantee"
+          href="/studios"
           prefetch={false}
         >
           Host Your Space
