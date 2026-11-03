@@ -1,26 +1,143 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  --background: #f4f1e8;
+  --foreground: #1b211f;
+  --card: #fffdf8;
+  --card-foreground: #1b211f;
+  --popover: #fffdf8;
+  --popover-foreground: #1b211f;
+  --primary: #a94f31;
+  --primary-foreground: #ffffff;
+  --secondary: #e5e8df;
+  --secondary-foreground: #1b211f;
+  --accent: #59664f;
+  --accent-foreground: #ffffff;
+  --muted: #eceae2;
+  --muted-foreground: #626b65;
+  --border: #dddcd3;
+  --input: #c9c8bd;
+  --ring: #a94f31;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+  --success: #2f6f4e;
+  --success-foreground: #ffffff;
+  --warning: #805000;
+  --warning-foreground: #ffffff;
+
+  --brand-copper: #c66a45;
+  --brand-sage: #78836b;
+
+  --radius: 0.875rem;
+  --ss-shadow-card: 0 12px 32px rgb(27 33 31 / 6%);
+  --ss-shadow-popover: 0 18px 48px rgb(27 33 31 / 14%);
+  --motion-fast: 140ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #151a18;
+  --foreground: #f4f1e8;
+  --card: #1c2320;
+  --card-foreground: #f4f1e8;
+  --popover: #232b27;
+  --popover-foreground: #f4f1e8;
+  --primary: #e08a65;
+  --primary-foreground: #1b211f;
+  --secondary: #2a342e;
+  --secondary-foreground: #f4f1e8;
+  --accent: #a6b094;
+  --accent-foreground: #151a18;
+  --muted: #252d29;
+  --muted-foreground: #b4bdb5;
+  --border: #3a4540;
+  --input: #46514b;
+  --ring: #e08a65;
+  --destructive: #ff7a70;
+  --destructive-foreground: #151a18;
+  --success: #7bcc9b;
+  --success-foreground: #151a18;
+  --warning: #f5bd5c;
+  --warning-foreground: #151a18;
+
+  --ss-shadow-card: 0 12px 32px rgb(0 0 0 / 20%);
+  --ss-shadow-popover: 0 18px 48px rgb(0 0 0 / 36%);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-brand-copper: var(--brand-copper);
+  --color-brand-sage: var(--brand-sage);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-instrument-serif);
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: calc(var(--radius) - 0.125rem);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 0.25rem);
+  --shadow-card: var(--ss-shadow-card);
+  --shadow-popover: var(--ss-shadow-popover);
+  --spacing-section: 6rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@custom-variant dark (&:where(.dark, .dark *));
+
+* {
+  border-color: var(--border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

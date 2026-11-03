@@ -1,69 +1,377 @@
 import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Camera,
+  Clapperboard,
+  Lightbulb,
+  MapPin,
+  Mic2,
+  Music2,
+  Search,
+  UsersRound,
+} from "lucide-react";
+import { HeroCarousel } from "@/components/home/hero-carousel";
+import { StudioCard } from "@/components/home/studio-card";
+import { Container } from "@/components/container";
+import { SectionHeader } from "@/components/section-header";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  bookingSteps,
+  featuredStudios,
+  hostAssurances,
+  studioCategories,
+} from "@/data/homepage";
+
+export const metadata = {
+  title: "Creative studio spaces for every idea",
+  description:
+    "Discover distinctive spaces for photography, film, podcasts, music, and creative gatherings.",
+};
+
+const categoryIcons = {
+  photography: Camera,
+  "film-video": Clapperboard,
+  podcast: Mic2,
+  music: Music2,
+  events: UsersRound,
+};
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.js
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      <SiteHeader />
+      <main>
+        <section className="pb-14 pt-5 sm:pb-20 sm:pt-8">
+          <Container>
+            <HeroCarousel />
+            <form
+              aria-describedby="studio-search-note"
+              className="relative z-10 mx-auto -mt-5 grid max-w-5xl gap-3 rounded-2xl border border-border bg-card p-4 shadow-card sm:-mt-7 sm:grid-cols-[1.1fr_1fr_auto] sm:items-end sm:gap-4 sm:p-5"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <div className="min-w-0 space-y-2">
+                <Label htmlFor="studio-location">Where are you creating?</Label>
+                <div className="relative">
+                  <MapPin
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                  />
+                  <Input
+                    className="pl-9"
+                    id="studio-location"
+                    name="location"
+                    placeholder="City or neighborhood"
+                    type="search"
+                    disabled
+                  />
+                </div>
+              </div>
+              <div className="min-w-0 space-y-2">
+                <Label htmlFor="studio-category">What are you making?</Label>
+                <select
+                  className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition-[border-color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
+                  defaultValue=""
+                  disabled
+                  id="studio-category"
+                  name="category"
+                >
+                  <option value="">All creative spaces</option>
+                  {studioCategories.map((category) => (
+                    <option key={category.slug} value={category.slug}>
+                      {category.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <Button className="h-11 sm:px-6" disabled type="button">
+                <Search aria-hidden="true" />
+                Find a space
+              </Button>
+            </form>
+            <p
+              className="mx-auto mt-3 max-w-5xl text-center text-xs text-muted-foreground"
+              id="studio-search-note"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+              Search is coming with Explore Studios. For now, browse the
+              featured spaces below.
+            </p>
+          </Container>
+        </section>
+
+        <section
+          aria-labelledby="categories-title"
+          className="scroll-mt-24 py-14 sm:py-20"
+          id="categories"
+        >
+          <Container>
+            <div className="mb-8 grid gap-5 md:mb-10 md:grid-cols-[1fr_auto] md:items-end">
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+                  Find your frame
+                </p>
+                <h2
+                  className="max-w-xl font-display text-4xl leading-[0.98] tracking-[-0.025em] text-foreground sm:text-5xl"
+                  id="categories-title"
+                >
+                  A space for the way you create.
+                </h2>
+              </div>
+              <p className="max-w-md text-sm leading-6 text-muted-foreground sm:text-base">
+                Start with your craft. Find a room, a rig, or a fresh point of
+                view for what comes next.
+              </p>
+            </div>
+
+            <div className="grid auto-rows-[150px] grid-cols-2 gap-3 sm:auto-rows-[180px] sm:gap-4 lg:grid-cols-6 lg:auto-rows-[190px]">
+              {studioCategories.map((category, index) => {
+                const Icon = categoryIcons[category.slug];
+                const layout =
+                  index === 0
+                    ? "col-span-2 row-span-2 lg:col-span-2"
+                    : index === 1
+                      ? "col-span-2 lg:col-span-4"
+                      : "col-span-1 lg:col-span-2";
+
+                return (
+                  <Link
+                    aria-label={`Explore ${category.title}: ${category.description}`}
+                    className={`group relative isolate overflow-hidden rounded-2xl bg-foreground text-white focus-visible:outline-offset-4 sm:rounded-[1.5rem] ${layout}`}
+                    href={`/#category-${category.slug}`}
+                    id={`category-${category.slug}`}
+                    key={category.slug}
+                    prefetch={false}
+                  >
+                    <Image
+                      alt={category.imageAlt}
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 45vw, 33vw"
+                      src={category.image}
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent"
+                    />
+                    <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4 sm:p-5">
+                      <span>
+                        <span className="mb-2 flex size-8 items-center justify-center rounded-full border border-white/35 bg-white/10 backdrop-blur-sm">
+                          <Icon aria-hidden="true" className="size-4" />
+                        </span>
+                        <span className="block font-display text-2xl leading-none sm:text-3xl">
+                          {category.title}
+                        </span>
+                        <span className="mt-2 hidden max-w-xs text-xs leading-5 text-white/80 sm:block">
+                          {category.description}
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="mb-0.5 grid size-9 shrink-0 translate-y-1 place-items-center rounded-full border border-white/40 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
+                      >
+                        <ArrowUpRight className="size-4" />
+                      </span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </Container>
+        </section>
+
+        <section
+          aria-labelledby="studios-title"
+          className="scroll-mt-24 bg-secondary/45 py-16 sm:py-24"
+          id="studios"
+        >
+          <Container>
+            <SectionHeader
+              action={
+                <Button asChild className="self-start" variant="outline">
+                  <Link href="/#studios" prefetch={false}>
+                    Explore Studios
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </Button>
+              }
+              description="A few distinctive places to get your imagination moving."
+              eyebrow="Spaces with a point of view"
+              titleId="studios-title"
+              title="Good work starts somewhere."
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+            <div className="mt-9 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-12">
+              {featuredStudios.map((studio) => (
+                <StudioCard key={studio.slug} studio={studio} />
+              ))}
+            </div>
+          </Container>
+        </section>
+
+        <section
+          aria-labelledby="how-it-works-title"
+          className="scroll-mt-24 py-16 sm:py-24"
+          id="how-it-works"
+        >
+          <Container>
+            <SectionHeader
+              description="A little less searching. A lot more room to focus on the work."
+              eyebrow="The StudioSpace approach"
+              titleId="how-it-works-title"
+              title="From first thought to first take."
+            />
+            <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:mt-14 lg:grid-cols-4">
+              {bookingSteps.map((step) => (
+                <li
+                  className="relative min-h-52 rounded-2xl border border-border bg-card p-5 sm:p-6"
+                  key={step.number}
+                >
+                  <span className="font-display text-4xl italic text-primary">
+                    {step.number}
+                  </span>
+                  <h3 className="mt-7 text-lg font-semibold tracking-[-0.02em] text-foreground">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {step.description}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </Container>
+        </section>
+
+        <section
+          aria-labelledby="about-title"
+          className="scroll-mt-24 overflow-hidden bg-foreground py-16 text-background sm:py-24"
+          id="about"
+        >
+          <Container>
+            <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
+              <div className="max-w-xl">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#e9a485]">
+                  About StudioSpace
+                </p>
+                <h2
+                  className="font-display text-4xl leading-[0.98] tracking-[-0.025em] sm:text-5xl lg:text-6xl"
+                  id="about-title"
+                >
+                  A home for the people behind the work.
+                </h2>
+                <p className="mt-5 max-w-md text-sm leading-6 text-background/70 sm:text-base sm:leading-7">
+                  StudioSpace is a creative workspace marketplace in the
+                  making. Our purpose is to help photographers, filmmakers,
+                  podcasters, musicians, and other creative professionals find
+                  characterful places to bring their ideas to life.
+                </p>
+              </div>
+
+              <div className="flex flex-col justify-center">
+                <p className="max-w-xl font-display text-3xl leading-tight sm:text-4xl">
+                  We believe the right room can change what feels possible.
+                </p>
+                <p className="mt-5 max-w-xl text-sm leading-6 text-background/70 sm:text-base sm:leading-7">
+                  By bringing independent hosts and working creatives closer
+                  together, we want to make finding a production-ready space a
+                  more human part of the creative process.
+                </p>
+                <div
+                  aria-label="Creative communities StudioSpace is for"
+                  className="mt-6 flex flex-wrap gap-2"
+                >
+                  {studioCategories.map((category) => (
+                    <span
+                      className="rounded-full border border-background/25 px-3 py-1.5 text-xs font-medium text-background/85"
+                      key={category.slug}
+                    >
+                      {category.title}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Container>
+        </section>
+
+        <section
+          aria-labelledby="host-guarantee-title"
+          className="scroll-mt-24 py-16 sm:py-24"
+          id="host-guarantee"
+        >
+          <Container>
+            <SectionHeader
+              description="Trust and practical support should be part of every creative collaboration."
+              eyebrow="For hosts and creators"
+              titleId="host-guarantee-title"
+              title="Host Guarantee & Creator Support"
+            />
+            <ul className="mt-9 grid gap-x-6 sm:grid-cols-2 lg:mt-12 lg:grid-cols-4">
+                {hostAssurances.map((item, index) => (
+                  <li
+                    className="border-t border-border py-5 sm:py-6"
+                    key={item.title}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-primary">
+                        {index === 0 ? (
+                          <Lightbulb aria-hidden="true" className="size-4" />
+                        ) : index === 1 ? (
+                          <ArrowRight aria-hidden="true" className="size-4" />
+                        ) : index === 2 ? (
+                          <MapPin aria-hidden="true" className="size-4" />
+                        ) : (
+                          <Camera aria-hidden="true" className="size-4" />
+                        )}
+                      </span>
+                      <div>
+                        <h3 className="text-base font-semibold text-foreground">{item.title}</h3>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+            <p className="mt-5 rounded-xl border border-border bg-card px-4 py-3 text-sm leading-6 text-muted-foreground">
+              Listings, bookings, host protections, and creator-support
+              services are not live yet. Their terms will be published before
+              any booking service opens.
+            </p>
+            <Button asChild className="mt-6" variant="outline">
+              <Link href="/#host-guarantee" prefetch={false}>
+                Host Your Space
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+          </Container>
+        </section>
+
+        <section className="py-14 sm:py-20">
+          <Container>
+            <div className="flex flex-col justify-between gap-6 rounded-[1.75rem] bg-card p-6 sm:flex-row sm:items-center sm:p-9 lg:p-12">
+              <div className="max-w-2xl">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+                  Your next project starts here
+                </p>
+                <h2 className="font-display text-3xl leading-tight tracking-[-0.02em] text-foreground sm:text-4xl">
+                  Find the room that gets your ideas moving.
+                </h2>
+              </div>
+              <Button asChild className="shrink-0 self-start sm:self-auto" size="lg">
+                <Link href="/#studios" prefetch={false}>
+                  Explore Studios
+                  <ArrowUpRight aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
+          </Container>
+        </section>
       </main>
-    </div>
+      <SiteFooter />
+    </>
   );
 }
