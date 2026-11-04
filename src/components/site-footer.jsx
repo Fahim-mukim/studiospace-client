@@ -51,7 +51,7 @@ export function SiteFooter() {
             <h2 className="text-sm font-semibold text-foreground">Quick Links</h2>
             <ul className="mt-4 space-y-3">
               {quickLinks.map((link) => (
-                <li key={link.href}>
+                <li key={`${link.href}-${link.label}`}>
                   <Link
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     href={link.href}
