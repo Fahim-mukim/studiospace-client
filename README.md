@@ -1,13 +1,16 @@
 # StudioSpace Client
 
-StudioSpace Client is an independent Next.js application. It communicates with
-the separately maintained StudioSpace Express server over HTTP; this repository
-does not contain server code, database connections, or server credentials.
+StudioSpace Client is an independent Next.js application. It owns Better Auth
+authentication and communicates with the separately maintained StudioSpace
+Express server over HTTP for marketplace APIs. The Client and Server remain
+separate repositories, with independent dependencies, environment variables,
+Git histories, and deployments.
 
 ## Requirements
 
 - Node.js and npm
-- The separate StudioSpace Server running for live authentication and API access
+- MongoDB available to the Next.js server runtime for Better Auth
+- The separate StudioSpace Server running for marketplace API access
 
 ## Local setup
 
@@ -23,28 +26,31 @@ does not contain server code, database connections, or server credentials.
    Copy-Item .env.example .env.local
    ```
 
-3. Keep `NEXT_PUBLIC_API_BASE_URL` set to the origin of the Express API, without
-   `/api/auth`. The default local value is:
+3. Configure the Client's server-only authentication variables in `.env.local`:
 
    ```env
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
+   MONGODB_URI=mongodb://127.0.0.1:27017
+   MONGODB_DB_NAME=studiospace
+   BETTER_AUTH_URL=http://localhost:3000
+   BETTER_AUTH_SECRET=<a random secret of at least 32 characters>
+   GOOGLE_CLIENT_ID=<Google OAuth client ID>
+   GOOGLE_CLIENT_SECRET=<Google OAuth client secret>
    ```
 
-4. In a separate terminal and the separate server checkout, configure its own
-   environment and start the Express server. Then start the client:
+   Keep `NEXT_PUBLIC_API_BASE_URL` set to the Express API origin
+   (`http://localhost:5000` by default). It is only for marketplace HTTP APIs.
+   Never add a `NEXT_PUBLIC_` prefix to MongoDB or Better Auth secrets.
+
+4. Configure and run the Express Server from its own checkout and environment.
+   Then start the Client:
 
    ```bash
    npm run dev
    ```
 
-   Open [http://localhost:3000](http://localhost:3000).
-
-The client uses `http://localhost:5000/api/auth` for BetterAuth endpoints. The
-deployed frontend must set `NEXT_PUBLIC_API_BASE_URL` to the deployed Express
-API origin and the server must allow the deployed frontend origin through its
-credentialed CORS and BetterAuth trusted-origin configuration. Client and server
-environment variables, dependencies, deployments, and Git histories remain
-independent.
+   Open [http://localhost:3000](http://localhost:3000). Better Auth endpoints are
+   served by the Next.js application at `/api/auth`; marketplace requests continue
+   to use the separately configured Express API base URL.
 
 ## Authentication
 
@@ -52,24 +58,51 @@ independent.
   6 to 128 characters and contain at least one uppercase and one lowercase
   letter.
   A photo URL is optional.
-- Registration does not automatically sign in. The signup endpoint can return
-  the same successful response for an existing email to prevent email
-  enumeration, so the client reports that the request was received rather
-  than confirming that a new account was created. Continue to `/login` and
-  sign in explicitly. The same neutral message is shown for either response.
+- Registration does not automatically sign in (`autoSignIn: false`). Continue
+  to `/login` and sign in explicitly. Better Auth intentionally returns a
+  success-shaped response for a duplicate email in this mode to prevent email
+  enumeration. The Client therefore says “Signup request received. Continue to
+  sign in.” and does not claim that a new account was created.
 - Login at `/login` with email/password, or continue with Google.
-- Google OAuth requires valid Google credentials configured only in the
-  Express server environment. The provider callback remains
-  `http://localhost:5000/api/auth/callback/google` in local development; set
-  the corresponding deployed callback in the Google provider configuration
-  when deploying.
-- BetterAuth manages sessions on the server. Session cookies are HTTP-only;
-  the client sends credentialed HTTP requests and never reads or stores session
-  cookies, tokens, or passwords in browser storage.
+- Google OAuth requires the server-only Client variables
+  `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. The local callback is
+  `http://localhost:3000/api/auth/callback/google`. Update the authorized
+  redirect URI manually in Google Cloud Console; the deployed callback must use
+  the deployed Next.js origin.
+- Better Auth stores users in MongoDB's `user` collection, credential accounts
+  (including password hashes) in `account`, sessions in `session`, and signing
+  keys in `jwks`. The browser never connects to MongoDB and never stores
+  passwords or authentication tokens in local or session storage. Session
+  cookies are HTTP-only.
 
-The server remains authoritative for session validation and authorization.
-Client-side session state only controls the displayed account UI; it is not an
-authorization boundary.
+Next.js Better Auth and Express may use the same MongoDB database with separate
+connections: Next.js owns the authentication collections, while Express owns
+marketplace data such as studios, bookings, and reviews. Express still has its
+legacy Better Auth handler and authentication check during this migration; its
+protected APIs are not yet compatible with Next.js sessions. Do not treat
+Client-side session state or cookie presence as authorization. Express JWT
+verification through the Next.js JWKS endpoint is a separate Server milestone.
+
+### MongoDB integration test
+
+`npm test` runs the Node test suite and clearly skips the database integration
+test if either test variable is missing. To run it, provide an explicit
+dedicated test MongoDB URI and a database name that clearly includes `test`:
+
+```powershell
+$env:MONGODB_TEST_URI = "<dedicated MongoDB test URI>"
+$env:MONGODB_TEST_DB_NAME = "studiospace_auth_test"
+npm run test:auth-integration
+Remove-Item Env:\MONGODB_TEST_URI
+Remove-Item Env:\MONGODB_TEST_DB_NAME
+```
+
+The test never falls back to `MONGODB_URI`, never drops a database, uses a
+unique email, and removes only its own user, account, session, and newly
+generated signing-key records. It verifies signup persistence, password
+hashing, duplicate-email behavior, login, HTTP-only cookies, session/JWKS
+validation, and logout. Do not point these variables at a normal or production
+database.
 
 ## Scripts
 
@@ -77,5 +110,6 @@ authorization boundary.
 npm run dev
 npm run lint
 npm run build
+npm test
 npm start
 ```

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --conditions=react-server --test",
+    "test:auth-integration": "node --conditions=react-server --test tests/auth.integration.test.mjs"
   },
   "dependencies": {
     "better-auth": "1.7.16",
@@ -14,11 +16,13 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.67.0",
     "motion": "^14.9.0",
+    "mongodb": "^7.1.0",
     "next": "16.4.4",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.8.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
     "sonner": "^2.0.8",
     "swiper": "^14.4.0",
     "tailwind-merge": "^3.7.0"
