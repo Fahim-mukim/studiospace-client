@@ -52,8 +52,11 @@ independent.
   6 to 128 characters and contain at least one uppercase and one lowercase
   letter.
   A photo URL is optional.
-- Registration does not automatically sign in; successful registration
-  redirects to `/login`.
+- Registration does not automatically sign in. The signup endpoint can return
+  the same successful response for an existing email to prevent email
+  enumeration, so the client reports that the request was received rather
+  than confirming that a new account was created. Continue to `/login` and
+  sign in explicitly. The same neutral message is shown for either response.
 - Login at `/login` with email/password, or continue with Google.
 - Google OAuth requires valid Google credentials configured only in the
   Express server environment. The provider callback remains

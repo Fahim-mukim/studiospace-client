@@ -85,7 +85,7 @@ export function RegisterForm({ oauthError = false }) {
         );
         return;
       }
-      router.replace("/login?registered=1");
+      router.replace("/login?signup=submitted");
     } catch {
       toast.error("Registration failed. Please try again.");
     } finally {

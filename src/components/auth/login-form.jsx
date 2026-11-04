@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { GoogleAuthButton } from "@/components/auth/google-auth-button";
@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 export function LoginForm({
   oauthError = false,
-  registered = false,
+  signupSubmitted = false,
   returnTo = "/",
 }) {
   const router = useRouter();
@@ -23,21 +23,25 @@ export function LoginForm({
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
+  const handledQueryRef = useRef(false);
 
   useEffect(() => {
-    if (registered) toast.success("Account created. Sign in to continue.");
+    if ((!signupSubmitted && !oauthError) || handledQueryRef.current) return;
+    handledQueryRef.current = true;
+
+    if (signupSubmitted) {
+      toast.info("Signup request received. Continue to sign in.");
+    }
     if (oauthError) {
       toast.error("Google sign-in could not be completed. Please try again.");
     }
-    if (registered || oauthError) {
-      router.replace(
-        returnTo === "/"
-          ? "/login"
-          : `/login?returnTo=${encodeURIComponent(returnTo)}`,
-        { scroll: false },
-      );
-    }
-  }, [oauthError, registered, returnTo, router]);
+    router.replace(
+      returnTo === "/"
+        ? "/login"
+        : `/login?returnTo=${encodeURIComponent(returnTo)}`,
+      { scroll: false },
+    );
+  }, [oauthError, returnTo, router, signupSubmitted]);
 
   async function handleSubmit(event) {
     event.preventDefault();

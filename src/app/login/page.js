@@ -31,7 +31,7 @@ async function LoginPageContent({ searchParams }) {
     >
       <LoginForm
         oauthError={firstString(query.error) === "google"}
-        registered={firstString(query.registered) === "1"}
+        signupSubmitted={firstString(query.signup) === "submitted"}
         returnTo={returnTo}
       />
     </AuthPageShell>
