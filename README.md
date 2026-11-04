@@ -75,13 +75,14 @@ Git histories, and deployments.
   passwords or authentication tokens in local or session storage. Session
   cookies are HTTP-only.
 
-Next.js Better Auth and Express may use the same MongoDB database with separate
+Next.js Better Auth and Express use the same MongoDB database with separate
 connections: Next.js owns the authentication collections, while Express owns
-marketplace data such as studios, bookings, and reviews. Express still has its
-legacy Better Auth handler and authentication check during this migration; its
-protected APIs are not yet compatible with Next.js sessions. Do not treat
-Client-side session state or cookie presence as authorization. Express JWT
-verification through the Next.js JWKS endpoint is a separate Server milestone.
+marketplace data such as studios, bookings, and reviews. Express verifies the
+Client's JWT-backed session-data cookie (`better-auth.session_data`) using `jose`
+against the Next.js Client's remote JWKS endpoint (`/api/auth/jwks`). Express no
+longer maintains a local Better Auth instance or authentication endpoints. Note
+that direct browser-to-Express cross-origin cookie transport requires compatible
+domain configuration or a same-origin proxy; see the Server README for details.
 
 ### MongoDB integration test
 

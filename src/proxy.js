@@ -16,8 +16,9 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/add-studio/:path*",
+    "/my-studios/:path*",
     "/my-listings/:path*",
-    "/studios/edit/:path*",
     "/my-bookings/:path*",
+    "/studios/edit/:path*",
   ],
 };

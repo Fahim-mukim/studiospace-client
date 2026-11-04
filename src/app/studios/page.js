@@ -5,12 +5,12 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { StudioResults } from "@/components/studios/studio-results";
 import { studioCategories } from "@/data/homepage";
-import { featuredStudios } from "@/data/studios";
+import { getStudios } from "@/lib/api";
 
 export const metadata = {
   title: "Explore Studios",
   description:
-    "Browse sample creative studios for photography, film, podcasts, music, and workshops.",
+    "Browse creative studios for photography, film, podcasts, music, and workshops.",
 };
 
 const categorySlugs = new Set(studioCategories.map((category) => category.slug));
@@ -19,10 +19,37 @@ export default async function StudiosPage({ searchParams }) {
   const query = searchParams ? await searchParams : {};
   const requestedCategory = Array.isArray(query.category)
     ? query.category[0]
-    : query.category;
+    : query.category || "";
   const initialCategory = categorySlugs.has(requestedCategory)
     ? requestedCategory
     : "";
+  const initialSearch =
+    typeof query.search === "string" ? query.search : "";
+  const initialMaxPrice =
+    typeof query.maxPrice === "string" ? query.maxPrice : "all";
+  const initialSort =
+    typeof query.sort === "string" ? query.sort : "recommended";
+  const initialPage = Number(query.page) || 1;
+
+  let initialData = null;
+  let initialError = null;
+
+  try {
+    initialData = await getStudios(
+      {
+        category: initialCategory,
+        search: initialSearch,
+        maxPrice: initialMaxPrice,
+        sort: initialSort,
+        page: initialPage,
+      },
+      { cache: "no-store" },
+    );
+  } catch (err) {
+    initialError =
+      err.message ||
+      "Unable to connect to the StudioSpace API. Ensure the server is running.";
+  }
 
   return (
     <>
@@ -62,16 +89,21 @@ export default async function StudiosPage({ searchParams }) {
             className="mt-7 rounded-2xl border border-border bg-secondary/60 px-4 py-3 text-sm leading-6 text-secondary-foreground sm:px-5"
             role="note"
           >
-            Demonstration listings: names, locations, prices, ratings, hosts,
-            and reviews are sample content. Live availability and reservations
-            are not connected.
+            Live studio listings powered by the StudioSpace API. Booking and
+            reservation submissions remain demonstration concepts.
           </p>
 
           <StudioResults
             categories={studioCategories}
             initialCategory={initialCategory}
-            key={initialCategory}
-            studios={featuredStudios}
+            initialError={initialError}
+            initialMaxPrice={initialMaxPrice}
+            initialPage={initialPage}
+            initialPagination={initialData?.pagination}
+            initialSearch={initialSearch}
+            initialSort={initialSort}
+            initialStudios={initialData?.studios ?? []}
+            key={`${initialCategory}-${initialSearch}-${initialMaxPrice}-${initialSort}-${initialPage}`}
           />
         </Container>
       </main>

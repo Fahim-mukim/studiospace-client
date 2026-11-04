@@ -159,7 +159,7 @@ export function createAuth({ database, mongoClient, config }) {
     }),
     emailAndPassword: {
       enabled: true,
-      autoSignIn: false,
+      autoSignIn: true,
       minPasswordLength: 6,
       maxPasswordLength: 128,
     },

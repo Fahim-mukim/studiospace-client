@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { GoogleAuthButton } from "@/components/auth/google-auth-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { getSafeReturnTo } from "@/lib/safe-return-to";
 
 function validateRegistration({ name, email, photoURL, password }) {
   const errors = {};
@@ -44,6 +45,11 @@ function validateRegistration({ name, email, photoURL, password }) {
 
 export function RegisterForm({ oauthError = false }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = getSafeReturnTo(
+    searchParams?.get("returnTo") || searchParams?.get("callbackURL") || "/",
+  );
+  const { refetch } = authClient.useSession();
   const [values, setValues] = useState({
     name: "",
     email: "",
@@ -85,7 +91,12 @@ export function RegisterForm({ oauthError = false }) {
         );
         return;
       }
-      router.replace("/login?signup=submitted");
+      try {
+        await refetch();
+      } catch {}
+      toast.success("Account created successfully.");
+      router.replace(returnTo);
+      router.refresh();
     } catch {
       toast.error("Registration failed. Please try again.");
     } finally {

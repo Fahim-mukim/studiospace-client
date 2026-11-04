@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Menu } from "lucide-react";
+import { LayoutDashboard, ListChecks, LogOut, Menu, PlusCircle, Sparkles, CalendarCheck } from "lucide-react";
 import { StudioSpaceLogo } from "@/components/brand/studiospace-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -85,7 +85,7 @@ function AccountMenu({ user, onLogout, mobile = false }) {
   const label = user?.name || user?.email || "Your account";
   const buttonClass = mobile
     ? "flex w-full items-center justify-start gap-3 rounded-xl px-3 py-3 text-left"
-    : "max-w-48 justify-start gap-2 px-2";
+    : "justify-start gap-2 px-2";
 
   return (
     <DropdownMenu>
@@ -111,16 +111,87 @@ function AccountMenu({ user, onLogout, mobile = false }) {
           ) : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/dashboard">
+            <LayoutDashboard aria-hidden="true" className="size-4" />
+            Dashboard
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/add-studio">
+            <PlusCircle aria-hidden="true" className="size-4" />
+            Add New Studio
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/my-listings">
+            <ListChecks aria-hidden="true" className="size-4" />
+            My Studio Listings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/my-bookings">
+            <CalendarCheck aria-hidden="true" className="size-4" />
+            My Bookings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onLogout} variant="destructive">
           <LogOut aria-hidden="true" className="size-4" />
-          Log out
+          Logout
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-export function SiteHeader() {
+function SiteHeaderFallback() {
+  return (
+    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2">
+          <Link aria-label="StudioSpace home" className="flex items-center gap-2" href="/">
+            <StudioSpaceLogo className="h-7 w-auto" />
+          </Link>
+        </div>
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
+          <Button asChild className="rounded-lg px-3" size="sm" variant="ghost">
+            <Link href="/">Home</Link>
+          </Button>
+          <Button asChild className="rounded-lg px-3" size="sm" variant="ghost">
+            <Link href="/#categories">Categories</Link>
+          </Button>
+          <Button asChild className="rounded-lg px-3" size="sm" variant="ghost">
+            <Link href="/studios">Explore Studios</Link>
+          </Button>
+        </nav>
+        <div className="flex items-center gap-1.5">
+          <ThemeToggle />
+          <div className="hidden items-center gap-2 md:flex">
+            <Button asChild size="sm" variant="ghost">
+              <Link href="/login">Log in</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/register">
+                <Sparkles aria-hidden="true" className="size-4" />
+                Get started
+              </Link>
+            </Button>
+          </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button aria-label="Open navigation menu" className="md:hidden" size="icon" variant="ghost">
+                <Menu className="size-5" />
+              </Button>
+            </SheetTrigger>
+          </Sheet>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function SiteHeaderInner(){
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, isPending: sessionPending, refetch } = authClient.useSession();
@@ -362,5 +433,13 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
+  );
+}
+
+export function SiteHeader() {
+  return (
+    <Suspense fallback={<SiteHeaderFallback />}>
+      <SiteHeaderInner />
+    </Suspense>
   );
 }
