@@ -330,7 +330,7 @@ export default function Home() {
 
         <section
           aria-labelledby="about-title"
-          className="scroll-mt-24 overflow-hidden bg-foreground py-16 text-background sm:py-24"
+          className="scroll-mt-24 overflow-hidden bg-background py-16 text-foreground sm:py-24"
           id="about"
         >
           <Container>
@@ -345,7 +345,7 @@ export default function Home() {
                 >
                   A home for the people behind the work.
                 </h2>
-                <p className="mt-5 max-w-md text-sm leading-6 text-background/70 sm:text-base sm:leading-7">
+                <p className="mt-5 max-w-md text-sm leading-6 text-foreground/70 sm:text-base sm:leading-7">
                   StudioSpace is a creative workspace marketplace in the
                   making. Our purpose is to help photographers, filmmakers,
                   podcasters, musicians, and other creative professionals find
@@ -357,7 +357,7 @@ export default function Home() {
                 <p className="max-w-xl font-display text-3xl leading-tight sm:text-4xl">
                   We believe the right room can change what feels possible.
                 </p>
-                <p className="mt-5 max-w-xl text-sm leading-6 text-background/70 sm:text-base sm:leading-7">
+                <p className="mt-5 max-w-xl text-sm leading-6 text-foreground/70 sm:text-base sm:leading-7">
                   By bringing independent hosts and working creatives closer
                   together, we want to make finding a production-ready space a
                   more human part of the creative process.
@@ -368,7 +368,7 @@ export default function Home() {
                 >
                   {studioCategories.map((category) => (
                     <span
-                      className="rounded-full border border-background/25 px-3 py-1.5 text-xs font-medium text-background/85"
+                      className="rounded-full border border-foreground/25 px-3 py-1.5 text-xs font-medium text-foreground/85"
                       key={category.slug}
                     >
                       {category.title}
