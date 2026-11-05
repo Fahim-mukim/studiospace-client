@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   ApiError,
   buildApiUrl,
+  cancelBooking,
   deleteStudio,
   getApiBaseUrl,
   getStudios,
@@ -298,6 +299,45 @@ test("deleteStudio preserves standardized API errors", async () => {
       code: "STUDIO_HAS_BOOKINGS",
       message: "This studio has booking history",
     });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("cancelBooking sends an authenticated bodyless PATCH and preserves API errors", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl;
+  let requestOptions;
+  globalThis.fetch = async (url, options) => {
+    requestedUrl = String(url);
+    requestOptions = options;
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: "This booking can no longer be cancelled.",
+        code: "INVALID_BOOKING_STATUS",
+        details: null,
+      }),
+      { status: 400, headers: { "content-type": "application/json" } },
+    );
+  };
+
+  try {
+    await assert.rejects(cancelBooking("booking-id"), {
+      name: "ApiError",
+      status: 400,
+      code: "INVALID_BOOKING_STATUS",
+      message: "This booking can no longer be cancelled.",
+    });
+    assert.equal(
+      new URL(requestedUrl, "http://localhost:3000").pathname,
+      "/api/marketplace/bookings/booking-id/cancel",
+    );
+    assert.equal(requestOptions.method, "PATCH");
+    assert.equal(requestOptions.credentials, "include");
+    assert.equal("body" in requestOptions, false);
+    assert.deepEqual(requestOptions.headers, { Accept: "application/json" });
+    assert.equal(requestOptions.headers["Content-Type"], undefined);
   } finally {
     globalThis.fetch = originalFetch;
   }

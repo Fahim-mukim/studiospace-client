@@ -187,6 +187,46 @@ test("forwards exact JSON body and query while dropping unapproved headers", asy
   assert.equal(queryUrl.search, "?limit=5&sort=newest");
 });
 
+test("forwards booking cancellation as a bodyless PATCH without JSON headers", async () => {
+  const upstreamError = {
+    success: false,
+    message: "You do not have permission to cancel this booking",
+    code: "FORBIDDEN",
+    details: null,
+  };
+  let upstreamOptions;
+  const response = await handleMarketplaceProxy(
+    makeRequest("bookings/65c7a6b0c9d2fddc4493e001/cancel", {
+      method: "PATCH",
+      headers: {
+        cookie:
+          "unrelated=value; better-auth.session_token=opaque; better-auth.session_data=jwt%2Bvalue",
+        authorization: "untrusted",
+        "x-arbitrary-header": "untrusted",
+      },
+    }),
+    {
+      env,
+      fetchImpl: async (_url, options) => {
+        upstreamOptions = options;
+        return jsonResponse(upstreamError, 403);
+      },
+    },
+  );
+
+  assert.equal(response.status, 403);
+  assert.deepEqual(await response.json(), upstreamError);
+  assert.equal(upstreamOptions.method, "PATCH");
+  assert.equal("body" in upstreamOptions, false);
+  assert.equal(upstreamOptions.headers.has("content-type"), false);
+  assert.equal(
+    upstreamOptions.headers.get("cookie"),
+    "better-auth.session_data=jwt%2Bvalue",
+  );
+  assert.equal(upstreamOptions.headers.has("authorization"), false);
+  assert.equal(upstreamOptions.headers.has("x-arbitrary-header"), false);
+});
+
 test("forwards only a valid Better Auth session-data cookie, including chunks", () => {
   assert.equal(
     filterSessionDataCookie(
@@ -275,7 +315,10 @@ test("requires same-origin JSON mutations and never calls Express for invalid CS
 
   for (const request of requests) {
     const response = await handleMarketplaceProxy(request, { env, fetchImpl });
-    assert.ok([403, 415].includes(response.status));
+    assert.ok(
+      [403, 415].includes(response.status),
+      `${request.method} ${request.url} returned ${response.status}`,
+    );
   }
   assert.equal(upstreamCalls, 0);
 });
@@ -467,6 +510,11 @@ test("routes protected Client API helpers through the same-origin proxy", async 
     ],
   );
   assert.ok(requested.every(({ options }) => options.credentials === "include"));
+  const cancellation = requested.at(-1).options;
+  assert.equal(cancellation.method, "PATCH");
+  assert.equal("body" in cancellation, false);
+  assert.deepEqual(cancellation.headers, { Accept: "application/json" });
+  assert.equal(cancellation.headers["Content-Type"], undefined);
 });
 
 test("DELETE studio forwards only the session-data cookie and never the opaque session token", async () => {

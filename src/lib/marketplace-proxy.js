@@ -36,15 +36,26 @@ function getAllowedEndpoint(method, pathname) {
   }
 
   const candidates = [
-    { path: "studios", method: "POST", upstreamPath: "/api/studios" },
+    {
+      path: "studios",
+      method: "POST",
+      bodyMethods: ["POST"],
+      upstreamPath: "/api/studios",
+    },
     { path: "studios/mine", method: "GET", upstreamPath: "/api/studios/mine" },
     {
       pattern: /^studios\/[A-Za-z0-9][A-Za-z0-9_-]{0,159}$/,
       methods: ["PATCH", "DELETE"],
+      bodyMethods: ["PATCH"],
       upstreamPath: (candidate) =>
         `/api/studios/${candidate.slice("studios/".length)}`,
     },
-    { path: "bookings", method: "POST", upstreamPath: "/api/bookings" },
+    {
+      path: "bookings",
+      method: "POST",
+      bodyMethods: ["POST"],
+      upstreamPath: "/api/bookings",
+    },
     { path: "bookings/mine", method: "GET", upstreamPath: "/api/bookings/mine" },
     {
       pattern: /^bookings\/[a-fA-F0-9]{24}\/cancel$/,
@@ -64,6 +75,7 @@ function getAllowedEndpoint(method, pathname) {
 
   return {
     kind: "allowed",
+    hasBody: candidate.bodyMethods?.includes(method) ?? false,
     upstreamPath:
       typeof candidate.upstreamPath === "function"
         ? candidate.upstreamPath(path)
@@ -232,8 +244,8 @@ export async function handleMarketplaceProxy(
   }
 
   const method = request.method.toUpperCase();
-  const hasBody = method === "POST" || method === "PATCH";
-  const isMutation = hasBody || method === "DELETE";
+  const hasBody = endpoint.hasBody;
+  const isMutation = ["POST", "PATCH", "DELETE"].includes(method);
   if (hasBody) {
     const contentType = request.headers.get("content-type") || "";
     if (contentType.split(";", 1)[0].trim().toLowerCase() !== "application/json") {

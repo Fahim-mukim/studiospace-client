@@ -445,11 +445,14 @@ export async function getMyBookings(options = {}) {
 }
 
 export async function cancelBooking(bookingId, options = {}) {
-  const result = await fetchMarketplaceApi(`/bookings/${encodeURIComponent(bookingId)}/cancel`, {
-    method: "PATCH",
-    credentials: "include",
-    ...options,
-  });
+  const result = await fetchMarketplaceApi(
+    `/bookings/${encodeURIComponent(bookingId)}/cancel`,
+    {
+      method: "PATCH",
+      credentials: "include",
+      ...options,
+    },
+  );
 
   return {
     success: Boolean(result?.success),

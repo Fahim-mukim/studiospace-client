@@ -1,10 +1,19 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, ListChecks, LogOut, Menu, PlusCircle, Sparkles, CalendarCheck } from "lucide-react";
+import {
+  CalendarCheck,
+  LayoutDashboard,
+  ListChecks,
+  LogOut,
+  Menu,
+  PlusCircle,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import { StudioSpaceLogo } from "@/components/brand/studiospace-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -81,18 +90,51 @@ function AccountAvatar({ user, compact = false }) {
   );
 }
 
-function AccountMenu({ user, onLogout, mobile = false }) {
+function AccountMenu({ user, onLogout, onNavigate, mobile = false }) {
+  const [open, setOpen] = useState(false);
+  const closeTimer = useRef(null);
   const label = user?.name || user?.email || "Your account";
   const buttonClass = mobile
     ? "flex w-full items-center justify-start gap-3 rounded-xl px-3 py-3 text-left"
     : "justify-start gap-2 px-2";
 
+  useEffect(
+    () => () => {
+      clearTimeout(closeTimer.current);
+    },
+    [],
+  );
+
+  function clearCloseTimer() {
+    clearTimeout(closeTimer.current);
+    closeTimer.current = null;
+  }
+
+  function handleOpenChange(nextOpen) {
+    clearCloseTimer();
+    setOpen(nextOpen);
+  }
+
+  function handlePointerEnter(event) {
+    if (mobile || event.pointerType !== "mouse") return;
+    clearCloseTimer();
+    setOpen(true);
+  }
+
+  function handlePointerLeave(event) {
+    if (mobile || event.pointerType !== "mouse") return;
+    clearCloseTimer();
+    closeTimer.current = setTimeout(() => setOpen(false), 160);
+  }
+
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={handleOpenChange} open={open}>
       <DropdownMenuTrigger asChild>
         <Button
           aria-label={`Open account menu for ${label}`}
           className={buttonClass}
+          onPointerEnter={handlePointerEnter}
+          onPointerLeave={handlePointerLeave}
           size={mobile ? "default" : "sm"}
           type="button"
           variant={mobile ? "ghost" : "outline"}
@@ -101,7 +143,15 @@ function AccountMenu({ user, onLogout, mobile = false }) {
           <span className="min-w-0 truncate">{label}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
+      <DropdownMenuContent
+        align="end"
+        className="w-[min(16rem,calc(100vw-2rem))]"
+        collisionPadding={12}
+        onPointerEnter={clearCloseTimer}
+        onPointerLeave={handlePointerLeave}
+        side="bottom"
+        sideOffset={8}
+      >
         <DropdownMenuLabel className="flex flex-col gap-1">
           <span className="truncate">{user?.name || "StudioSpace member"}</span>
           {user?.email ? (
@@ -111,25 +161,31 @@ function AccountMenu({ user, onLogout, mobile = false }) {
           ) : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild onSelect={onNavigate}>
           <Link href="/dashboard">
             <LayoutDashboard aria-hidden="true" className="size-4" />
             Dashboard
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild onSelect={onNavigate}>
+          <Link href="/dashboard/profile">
+            <UserRound aria-hidden="true" className="size-4" />
+            Edit Profile
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild onSelect={onNavigate}>
           <Link href="/add-studio">
             <PlusCircle aria-hidden="true" className="size-4" />
             Add New Studio
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild onSelect={onNavigate}>
           <Link href="/my-listings">
             <ListChecks aria-hidden="true" className="size-4" />
             My Studio Listings
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild onSelect={onNavigate}>
           <Link href="/my-bookings">
             <CalendarCheck aria-hidden="true" className="size-4" />
             My Bookings
@@ -387,6 +443,7 @@ function SiteHeaderInner(){
                     <AccountMenu
                       mobile
                       onLogout={handleLogout}
+                      onNavigate={() => setMobileMenuOpen(false)}
                       user={user}
                     />
                   </div>
