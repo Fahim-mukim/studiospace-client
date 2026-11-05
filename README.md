@@ -57,21 +57,19 @@ Git histories, and deployments.
 - Register at `/register` with a name, email, and password. Passwords must be
   6 to 128 characters and contain at least one uppercase and one lowercase
   letter.
-  A photo URL is optional.
-- Registration signs the user in automatically (`autoSignIn: true`). Once
-  Better Auth creates the account, the Client attempts to refresh the session
-  and redirects to the safe `returnTo` destination, or `/` when none was
-  supplied. This is a deliberate, user-requested
-  deviation from the written assignment, which asks for a redirect to the Login
-  page after a successful signup; both behaviors are not claimed to be the
-  same. Better Auth may return a generic, error-free response for a duplicate
-  email to avoid revealing account existence. The current registration form
-  treats every error-free response as account creation and redirects, so this
-  duplicate-email UI behavior is not verified as accurate. The opt-in
-  integration test also still expects signup not to create a session, which
-  conflicts with the current `autoSignIn: true` configuration. Do not treat
-  that test as passing evidence until the configuration and test expectation
-  are reconciled and the dedicated-database test is run.
+  A photo URL is optional. Registration uses `autoSignIn: true`; after signup,
+  the Client verifies the returned user and confirms that the current session
+  belongs to that user before showing success or redirecting to the safe
+  `returnTo` destination (or `/`).
+- Better Auth 1.7.16 returns a duplicate-email error (`422`,
+  `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL`) with the current configuration,
+  rather than its generic success response, which requires
+  `autoSignIn: false` or email verification. The registration UI gives this
+  error a neutral message and does not state whether the email is registered.
+  The Better Auth endpoint still returns a distinguishable status/code; the
+  neutral UI message does not eliminate that API-level behavior. Changing
+  `autoSignIn` or adding a response-masking layer requires a separate security
+  decision.
 - Login at `/login` with email/password, or continue with Google.
 - Google OAuth requires the server-only Client variables
   `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. The local callback is
@@ -96,12 +94,11 @@ domain configuration or a same-origin proxy; see the Server README for details.
 ### MongoDB integration test
 
 `npm test` runs the Node test suite and clearly skips the database integration
-test if either test variable is missing. Its test source covers real Better
-Auth/MongoDB signup, credential persistence, login/session cookies, session
-lookup, and logout, but the test has not been run against the dedicated
-database in this checkout. Moreover, its expectation that signup creates no
-session is inconsistent with `autoSignIn: true` above; therefore those cases
-are not currently verified. To run it safely after reconciling that mismatch,
+test if either test variable is missing. Its opt-in integration test exercises
+the real Better Auth handler and MongoDB adapter, including auto-sign-in on
+new signup, duplicate-email behavior, credentials, session cookies, session
+lookup, and logout. The test was not run against MongoDB in this checkout
+because dedicated test database configuration is unavailable. To run it,
 provide an explicit dedicated test MongoDB URI and a database name that clearly
 includes `test`:
 
@@ -161,5 +158,4 @@ npm start
 ```
 
 `npm run test:auth-integration` requires the explicit dedicated test database
-variables described above; reconcile its current `autoSignIn` expectation
-before relying on the result.
+variables described above.

@@ -110,11 +110,11 @@ test(
     const jwksCollection = database.collection("jwks");
     let existingJWKS = new Set();
     const email = `auth-${randomUUID()}@example.com`;
+    const testEmails = new Set([email]);
     const password = `A${randomBytes(24).toString("base64url")}z`;
     let handler;
-    let createdUserId;
     let sessionCookieJar = new Map();
-    let signingKeyId;
+    const signingKeyIds = new Set();
 
     try {
       existingJWKS = new Set(
@@ -138,6 +138,7 @@ test(
       handler = toNextJsHandler(auth);
 
       const invalidImageEmail = `invalid-image-${randomUUID()}@example.com`;
+      testEmails.add(invalidImageEmail);
       const invalidImageResponse = await send(handler, "/sign-up/email", {
         method: "POST",
         body: {
@@ -158,6 +159,7 @@ test(
       );
 
       const unsupportedFieldsEmail = `unsupported-${randomUUID()}@example.com`;
+      testEmails.add(unsupportedFieldsEmail);
       const unsupportedFieldsResponse = await send(handler, "/sign-up/email", {
         method: "POST",
         body: {
@@ -187,16 +189,54 @@ test(
         },
       });
       assert.equal(signupResponse.status, 200, "Signup should succeed.");
-      const signupCookies = setCookieHeaders(signupResponse.headers);
+      const signupBody = await signupResponse.json();
       assert.equal(
-        sessionCookieNames(signupCookies).length,
-        0,
-        "Signup with autoSignIn disabled must not set session cookies.",
+        typeof signupBody.token,
+        "string",
+        "A new signup with autoSignIn enabled must return a session token.",
       );
+      assert.ok(signupBody.token);
+      assert.equal(signupBody.user?.email, email);
+      const signupCookies = setCookieHeaders(signupResponse.headers);
+      const signupCookieNames = sessionCookieNames(signupCookies);
+      assert.ok(
+        signupCookieNames.some((name) => name.endsWith(".session_token")),
+        "Signup must set the opaque session_token cookie.",
+      );
+      assert.ok(
+        signupCookieNames.some((name) => name.includes(".session_data")),
+        "Signup must set the JWT-backed session_data cookie.",
+      );
+      applySetCookies(sessionCookieJar, signupCookies);
+      const signupProtectedHeader = JSON.parse(
+        Buffer.from(
+          cacheCookieValue(sessionCookieJar).split(".")[0],
+          "base64url",
+        ).toString(),
+      );
+      assert.equal(
+        signupProtectedHeader.typ,
+        "better-auth.session-cache+jwt",
+        "Signup session_data must use Better Auth's JWT session-cache format.",
+      );
+      assert.equal(typeof signupProtectedHeader.kid, "string");
+      signingKeyIds.add(signupProtectedHeader.kid);
+      for (const cookie of signupCookies) {
+        if (sessionCookieNames([cookie]).length) {
+          assert.match(
+            cookie,
+            /;\s*httponly(?:;|$)/i,
+            "Session cookies must be HTTP-only.",
+          );
+        }
+      }
+      const signupCookieHeader = [...sessionCookieJar]
+        .map(([name, value]) => `${name}=${value}`)
+        .join("; ");
 
       const storedUser = await userCollection.findOne({ email });
       assert.ok(storedUser, "Signup must insert one user document.");
-      createdUserId = storedUser._id;
+      assert.equal(signupBody.user.id, String(storedUser._id));
       assert.equal(
         await userCollection.countDocuments({ email }),
         1,
@@ -219,9 +259,35 @@ test(
       };
       assert.equal(
         await sessionCollection.countDocuments(sessionForUser),
-        0,
-        "Signup must not create an authenticated session.",
+        1,
+        "Signup with autoSignIn enabled must persist an authenticated session.",
       );
+      const signupSessionResponse = await send(handler, "/get-session", {
+        cookie: signupCookieHeader,
+      });
+      assert.equal(signupSessionResponse.status, 200);
+      const signupSessionBody = await signupSessionResponse.json();
+      assert.equal(
+        signupSessionBody?.user?.id,
+        String(storedUser._id),
+        "The signup session cookie must authenticate the newly registered user.",
+      );
+
+      const signupLogoutResponse = await send(handler, "/sign-out", {
+        method: "POST",
+        cookie: signupCookieHeader,
+      });
+      assert.equal(signupLogoutResponse.status, 200);
+      applySetCookies(
+        sessionCookieJar,
+        setCookieHeaders(signupLogoutResponse.headers),
+      );
+      assert.equal(
+        await sessionCollection.countDocuments(sessionForUser),
+        0,
+        "The signup session must be removable before testing a separate login.",
+      );
+      sessionCookieJar = new Map();
 
       const duplicateResponse = await send(handler, "/sign-up/email", {
         method: "POST",
@@ -229,19 +295,37 @@ test(
       });
       assert.equal(
         duplicateResponse.status,
-        200,
-        "Duplicate signup should use the configured generic success response.",
+        422,
+        "With autoSignIn enabled, Better Auth returns its existing duplicate-email error.",
       );
       const duplicateBody = await duplicateResponse.json();
       assert.equal(
-        duplicateBody.token,
-        null,
-        "The duplicate signup response should not create a session.",
+        duplicateBody.code,
+        "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL",
+        "The duplicate response must match Better Auth's installed behavior.",
+      );
+      assert.equal(
+        sessionCookieNames(setCookieHeaders(duplicateResponse.headers)).length,
+        0,
+        "Duplicate signup must not set session cookies.",
       );
       assert.equal(
         await userCollection.countDocuments({ email }),
         1,
         "Duplicate signup must not insert a second user document.",
+      );
+      assert.equal(
+        await accountCollection.countDocuments({
+          accountId: String(storedUser._id),
+          providerId: "credential",
+        }),
+        1,
+        "Duplicate signup must not insert a second credential account.",
+      );
+      assert.equal(
+        await sessionCollection.countDocuments(sessionForUser),
+        0,
+        "Duplicate signup must not create an authenticated session.",
       );
 
       const invalidLoginResponse = await send(handler, "/sign-in/email", {
@@ -279,9 +363,9 @@ test(
       const protectedHeader = JSON.parse(
         Buffer.from(sessionCookieValue.split(".")[0], "base64url").toString(),
       );
-      signingKeyId = protectedHeader.kid;
+      signingKeyIds.add(protectedHeader.kid);
       assert.ok(
-        typeof signingKeyId === "string",
+        typeof protectedHeader.kid === "string",
         "The session_data JWT must include a signing key ID.",
       );
       for (const cookie of loginCookies) {
@@ -378,31 +462,33 @@ test(
       );
     } finally {
       try {
-        const testUser =
-          (createdUserId && { _id: createdUserId }) ||
-          (await userCollection.findOne({ email }));
-        if (testUser) {
-          const userIdFilter = {
-            userId: {
-              $in: [testUser._id, String(testUser._id)],
-            },
-          };
-          await sessionCollection.deleteMany(userIdFilter);
-          await accountCollection.deleteMany(userIdFilter);
-          await userCollection.deleteOne({ _id: testUser._id });
+        for (const testEmail of testEmails) {
+          const testUser = await userCollection.findOne({ email: testEmail });
+          if (testUser) {
+            const userIdFilter = {
+              userId: {
+                $in: [testUser._id, String(testUser._id)],
+              },
+            };
+            await sessionCollection.deleteMany(userIdFilter);
+            await accountCollection.deleteMany(userIdFilter);
+            await userCollection.deleteOne({ _id: testUser._id });
+          }
         }
-        if (signingKeyId) {
+        if (signingKeyIds.size) {
           const signingKeys = await jwksCollection.find({}).toArray();
-          const signingKey = signingKeys.find(
-            (key) =>
-              key.id === signingKeyId ||
-              String(key._id) === signingKeyId,
-          );
-          if (
-            signingKey &&
-            !existingJWKS.has(String(signingKey._id))
-          ) {
-            await jwksCollection.deleteOne({ _id: signingKey._id });
+          for (const signingKeyId of signingKeyIds) {
+            const signingKey = signingKeys.find(
+              (key) =>
+                key.id === signingKeyId ||
+                String(key._id) === signingKeyId,
+            );
+            if (
+              signingKey &&
+              !existingJWKS.has(String(signingKey._id))
+            ) {
+              await jwksCollection.deleteOne({ _id: signingKey._id });
+            }
           }
         }
       } finally {

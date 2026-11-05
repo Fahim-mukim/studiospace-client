@@ -11,6 +11,11 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { getSafeReturnTo } from "@/lib/safe-return-to";
+import {
+  getNewlyRegisteredUser,
+  isAuthenticatedAsNewSignup,
+  isDuplicateEmailError,
+} from "@/lib/signup-session";
 
 function validateRegistration({ name, email, photoURL, password }) {
   const errors = {};
@@ -77,23 +82,70 @@ export function RegisterForm({ oauthError = false }) {
     }
 
     setPending(true);
+    const email = values.email.trim();
     try {
       const result = await authClient.signUp.email({
         name: values.name.trim(),
-        email: values.email.trim(),
+        email,
         password: values.password,
         ...(values.photoURL.trim() ? { image: values.photoURL.trim() } : {}),
       });
       if (result?.error) {
+        if (isDuplicateEmailError(result)) {
+          toast.info(
+            "If you already have an account, log in. Otherwise, try registering again.",
+          );
+          return;
+        }
         toast.error(
           result.error.message ||
             "Registration failed. Check your details and try again.",
         );
         return;
       }
+
+      const registeredUser = getNewlyRegisteredUser(result, email);
+      if (!registeredUser) {
+        toast.info(
+          "If you already have an account, log in. Otherwise, try registering again.",
+        );
+        return;
+      }
+
+      let sessionResult;
       try {
         await refetch();
-      } catch {}
+        sessionResult = await authClient.getSession();
+      } catch {
+        if (process.env.NODE_ENV === "development") {
+          console.error("Could not verify the new registration session.");
+        }
+        toast.error(
+          "Your sign-in could not be verified. Please log in to continue.",
+        );
+        return;
+      }
+
+      if (!isAuthenticatedAsNewSignup(sessionResult, registeredUser)) {
+        if (process.env.NODE_ENV === "development" && sessionResult?.error) {
+          console.error("Could not verify the new registration session.", {
+            status:
+              typeof sessionResult?.error?.status === "number"
+                ? sessionResult.error.status
+                : undefined,
+            code:
+              typeof sessionResult?.error?.code === "string" &&
+              /^[A-Z0-9_]+$/.test(sessionResult.error.code)
+                ? sessionResult.error.code
+                : undefined,
+          });
+        }
+        toast.error(
+          "Your sign-in could not be verified. Please log in to continue.",
+        );
+        return;
+      }
+
       toast.success("Account created successfully.");
       router.replace(returnTo);
       router.refresh();
