@@ -1,9 +1,8 @@
 # StudioSpace Client Requirement Traceability
 
 This document records the current Client source and its integration with the
-independent Express Server. It is not a certification against the original
-assignment: that source assignment document has not been located. Statuses
-describe only the evidence identified here.
+independent Express Server against the original StudioSpace assignment brief.
+Statuses describe only the evidence identified here.
 
 ## Status and evidence legend
 
@@ -14,6 +13,10 @@ describe only the evidence identified here.
   or desired behavior.
 - **BLOCKED**: assessment depends on an unavailable requirement or external
   setup.
+- **NOT REQUIRED**: the original assignment brief does not require this
+  workflow; it is not treated as a missing feature.
+- **DEFERRED / PARTIAL**: the basic workflow is present, while the brief's
+  optional or later enhancement is intentionally deferred.
 - **UNVERIFIABLE**: source or runtime evidence is insufficient to confirm it.
 
 Source inspection, automated test execution, current browser checks, and
@@ -64,7 +67,8 @@ described as passing unless it was run successfully.
 | Studio details | PASS | `src/app/studios/[id]/page.js`, `src/lib/api.js`; `GET /api/studios/:id` | Reads by MongoDB ID or slug from Express; 404 uses the route not-found UI and API failures have retry/back UI. Source verified; detail route was not browser-tested in this milestone. |
 | Gallery, host, review display | PARTIAL | `src/components/studios/studio-gallery.jsx`, `src/app/studios/[id]/page.js`, `src/lib/api.js` | Gallery consumes API image fields and falls back to one local image when none exist. Host fields are limited by the API; normalizer supplies display defaults. Server does not expose a review API; current response commonly has no reviews/rating, so UI shows “New”/zero reviews or an empty review state, not verified ratings. |
 | Booking call-to-action on details | PASS | `src/app/studios/[id]/page.js`, `src/components/studios/booking-dialog.jsx`; `POST /api/bookings` | CTA submits booking date and times to Express for an authenticated request. A successful response means a pending request, not a confirmed booking. No payment or host approval flow. |
-| Add Studio | PASS | `src/app/add-studio/page.js`, `src/lib/api.js`; `POST /api/studios` | Source implements client and server validation; owner identity and host fields are derived server-side from verified JWT identity. Server tests cover insert, validation, ownership-field handling, and auth failures. |
+| Add Studio | PASS | `src/app/add-studio/page.js`, `src/lib/add-studio-form.mjs`, `src/lib/api.js`; `POST /api/studios` | Displays session-derived host name/email as read-only fields. The create payload contains studio data only; owner identity and host fields remain derived server-side from verified JWT identity. Image input remains an HTTP(S) URL. Client tests cover missing host values, URL validation, and omission of ownership fields; Server tests cover insert, validation, ownership-field handling, and auth failures. |
+| Studio image upload | DEFERRED / PARTIAL | `src/app/add-studio/page.js` | The assignment's current Add Studio flow accepts a hosted image URL; direct file upload and upload-provider integration are not implemented in this milestone. |
 | My Listings | PASS | `src/app/my-listings/page.js`, `src/lib/api.js`; `GET /api/studios/mine` | Authenticated API filters by verified user ID; UI has loading/error/retry/empty states and edit links. Server tests cover owner-only result filtering. |
 | Edit Studio and ownership | PASS | `src/app/studios/edit/[id]/page.js`, `src/lib/api.js`; `PATCH /api/studios/:id` | Client and Server validate supported editable fields; Server returns 403 to non-owner and ignores protected owner fields. Server tests cover owner update, forbidden update, not-found, validation, and ownership-field protection. |
 | Delete Studio | PASS | Client `src/app/my-listings/page.js`, `src/lib/api.js`, `src/lib/marketplace-proxy.js`; Server `index.js` | My Listings has a confirmation dialog, pending/disabled state, success-only local removal, and clear error toasts. `deleteStudio()` uses the same-origin BFF; its allowlist permits only `DELETE /api/marketplace/studios/:id` and validates mutation Origin. Express authenticates with the existing JWT middleware and checks stored ownership. It returns 409 (`STUDIO_HAS_BOOKINGS`) when any booking references the studio and never cascade-deletes bookings. Automated Server route, Client BFF, and helper tests cover these behaviors; Client build/lint pass. No live browser deletion or real MongoDB persistence test was performed in this milestone. |
@@ -79,7 +83,8 @@ described as passing unless it was run successfully.
 | Confirmed overlap | PARTIAL | Server `index.js` booking handler; `409 BOOKING_CONFLICT` | Handler checks for an overlapping `Confirmed` booking and returns HTTP 409. It then inserts in a separate operation; there is no atomic reservation/unique-window enforcement, and concurrent requests can race. Pending bookings do not block another request. |
 | My Bookings | PASS | `src/app/my-bookings/page.js`, `src/lib/api.js`; Server `tests/bookings.test.js`; `GET /api/bookings/mine` | Source returns only the authenticated user's bookings, newest first; UI shows status, summary, loading/error/retry and empty states. Server route tests cover ownership filtering and empty results using an isolated in-memory mock, not real MongoDB persistence. |
 | Pending booking cancellation | PASS | `src/app/my-bookings/page.js`, `src/lib/api.js`; Server `tests/bookings.test.js`; `PATCH /api/bookings/:id/cancel` | Source enforces owner-only cancellation and changes only `Pending` to `Cancelled`. Server route tests cover owner cancellation, non-owner rejection, missing records, and invalid statuses using an isolated in-memory mock; they do not establish real MongoDB persistence. |
-| Host approval or confirmation | FAIL | Server `index.js` has no booking approval/confirmation route | No API or UI to change a pending request to `Confirmed`. The overlap check recognizes confirmed records but current routes do not create them. `Completed` is display-handled in Client UI but is not produced by these Server routes. |
+| Booking status display | PASS | `src/app/my-bookings/page.js` | Displays the status returned by the Server, including Pending, Confirmed, Cancelled, and Completed. The Client allows cancellation of Pending bookings; other status transitions are not implemented here. |
+| Host approval or confirmation workflow | NOT REQUIRED | Original StudioSpace assignment brief; Server `index.js` | The original brief does not require a separate host-approval workflow. The app currently creates Pending booking requests and does not provide an API/UI to transition them to Confirmed; this is not treated as a missing assignment requirement. |
 
 ## Dashboard and profile
 
@@ -94,8 +99,8 @@ described as passing unless it was run successfully.
 |---|---|---|---|
 | Responsive layouts and controls | PARTIAL | `src/app/`, `src/components/` | Responsive breakpoints and accessible labels/states are visible in source. Historical Phase O.4.1A browser measurements found no horizontal overflow at 320, 375, 768, 1024, and 1440 CSS pixels after a card sizing fix; this is historical homepage-only evidence, not a current full-site retest. |
 | Loading, error, empty, not-found states | PASS | Homepage, Explore, detail, listings, dashboard and booking pages cited above | Source inspection confirms states; runtime branch coverage is incomplete. |
-| Automated Client checks | PARTIAL | `tests/api.test.mjs`, `tests/marketplace-proxy.test.mjs`, `tests/safe-return-to.test.mjs`, `tests/signup-session.test.mjs`, `tests/auth.integration.test.mjs` | Verified in this milestone: `npm test` passed 23, failed 0, skipped 1; `npm run lint` and `npm run build` passed. The skipped opt-in auth integration test requires explicit `MONGODB_TEST_URI` and `MONGODB_TEST_DB_NAME`; those variables are absent, so signup/session persistence was not verified. |
-| Original assignment compliance | PARTIAL | Original StudioSpace assignment brief provided with the current milestone | The original brief has been located and is being used for this compliance audit. This traceability matrix records the requirements reviewed so far and does not certify every assignment item. |
+| Automated Client checks | PARTIAL | `tests/add-studio-form.test.mjs`, `tests/api.test.mjs`, `tests/marketplace-proxy.test.mjs`, `tests/safe-return-to.test.mjs`, `tests/signup-session.test.mjs`, `tests/auth.integration.test.mjs` | Current run: `npm test` passed 26, failed 0, skipped 1; `npm run lint` and `npm run build` passed. The skipped opt-in auth integration test requires explicit `MONGODB_TEST_URI` and `MONGODB_TEST_DB_NAME`; those variables are absent, so signup/session persistence was not verified. |
+| Original assignment compliance | PARTIAL | Original StudioSpace assignment brief provided with the current milestone | The brief has been located and is used for this audit. This matrix records the reviewed requirements and does not certify every assignment item. |
 
 ## Next recommended milestone
 

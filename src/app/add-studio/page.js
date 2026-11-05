@@ -12,6 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createStudio } from "@/lib/api";
+import {
+  buildStudioPayload,
+  getHostInformation,
+  getStudioImageUrlError,
+} from "@/lib/add-studio-form.mjs";
 import { authClient } from "@/lib/auth-client";
 
 const CATEGORY_OPTIONS = [
@@ -21,16 +26,6 @@ const CATEGORY_OPTIONS = [
   { value: "music-suites", label: "Music Suites" },
   { value: "art-workshops", label: "Art Workshops" },
 ];
-
-function isHttpUrl(value) {
-  if (typeof value !== "string" || !value.trim()) return false;
-  try {
-    const url = new URL(value.trim());
-    return ["http:", "https:"].includes(url.protocol);
-  } catch {
-    return false;
-  }
-}
 
 function validateForm(values, amenities) {
   const errors = {};
@@ -91,11 +86,8 @@ function validateForm(values, amenities) {
     }
   }
 
-  if (!isHttpUrl(values.image)) {
-    errors.image = "Image must be a valid HTTP(S) URL.";
-  } else if (values.image.trim().length > 2048) {
-    errors.image = "Image URL must be 2048 characters or fewer.";
-  }
+  const imageError = getStudioImageUrlError(values.image);
+  if (imageError) errors.image = imageError;
 
   if (typeof values.imageAlt === "string" && values.imageAlt.trim().length > 250) {
     errors.imageAlt = "Image alt text must be 250 characters or fewer.";
@@ -134,6 +126,7 @@ export default function AddStudioPage() {
   const router = useRouter();
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const user = session?.user ?? null;
+  const hostInformation = getHostInformation(user);
 
   const [values, setValues] = useState({
     title: "",
@@ -205,22 +198,7 @@ export default function AddStudioPage() {
 
     setSubmitting(true);
     try {
-      const payload = {
-        title: values.title.trim(),
-        categorySlug: values.categorySlug,
-        hourlyRate: Number(values.hourlyRate),
-        securityDeposit: Number(values.securityDeposit),
-        capacity: Number(values.capacity),
-        location: values.location.trim(),
-        image: values.image.trim(),
-        amenities: cleanedAmenities,
-        overview: values.overview.trim(),
-      };
-
-      if (values.imageAlt && values.imageAlt.trim()) {
-        payload.imageAlt = values.imageAlt.trim();
-      }
-
+      const payload = buildStudioPayload(values, cleanedAmenities);
       const result = await createStudio(payload);
       const created = result?.studio || result?.data;
       const idOrSlug =
@@ -289,6 +267,39 @@ export default function AddStudioPage() {
                 noValidate
                 onSubmit={handleSubmit}
               >
+                <section className="space-y-4">
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Host information
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    These details come from your signed-in account and cannot
+                    be edited here.
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="host-name">User name</Label>
+                      <Input
+                        id="host-name"
+                        autoComplete="name"
+                        readOnly={hostInformation.readOnly}
+                        value={hostInformation.name}
+                        className="read-only:cursor-text read-only:bg-muted/40 read-only:text-muted-foreground"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="host-email">User email</Label>
+                      <Input
+                        id="host-email"
+                        type="email"
+                        autoComplete="email"
+                        readOnly={hostInformation.readOnly}
+                        value={hostInformation.email}
+                        className="read-only:cursor-text read-only:bg-muted/40 read-only:text-muted-foreground"
+                      />
+                    </div>
+                  </div>
+                </section>
+
                 <section className="space-y-4">
                   <h2 className="text-lg font-semibold text-foreground">
                     Basic information
@@ -427,6 +438,7 @@ export default function AddStudioPage() {
                       <Label htmlFor="image">Cover image URL *</Label>
                       <Input
                         id="image"
+                        maxLength={2048}
                         onChange={(event) =>
                           updateField("image", event.target.value)
                         }
