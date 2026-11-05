@@ -86,7 +86,7 @@ export function InteractiveHero() {
           <div className="flex gap-2">
             <Button
               aria-label="Previous featured image"
-              className="size-10 rounded-full border-white/50 bg-black/15 text-white hover:bg-white hover:text-foreground"
+              className="size-10 rounded-full border-white/70 bg-black/45 text-white hover:bg-white hover:text-stone-950 active:bg-stone-200 active:text-stone-950 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               onClick={() => swiper?.slidePrev()}
               size="icon"
               variant="outline"
@@ -95,7 +95,7 @@ export function InteractiveHero() {
             </Button>
             <Button
               aria-label="Next featured image"
-              className="size-10 rounded-full border-white/50 bg-black/15 text-white hover:bg-white hover:text-foreground"
+              className="size-10 rounded-full border-white/70 bg-black/45 text-white hover:bg-white hover:text-stone-950 active:bg-stone-200 active:text-stone-950 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               onClick={() => swiper?.slideNext()}
               size="icon"
               variant="outline"

@@ -125,7 +125,7 @@ export default function Home() {
     <>
       <SiteHeader />
       <main>
-        <section className="pb-14 pt-5 sm:pb-20 sm:pt-8">
+        <section className="pb-12 pt-5 sm:pb-18 sm:pt-8">
           <Container>
             <HeroCarousel />
             <form
@@ -429,7 +429,7 @@ export default function Home() {
               payment processing are not currently available.
             </p>
             <Button asChild className="mt-6" variant="outline">
-              <Link href="/studios" prefetch={false}>
+              <Link href="/add-studio" prefetch={false}>
                 Host Your Space
                 <ArrowRight aria-hidden="true" />
               </Link>

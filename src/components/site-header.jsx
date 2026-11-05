@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useId, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -11,7 +11,6 @@ import {
   LogOut,
   Menu,
   PlusCircle,
-  Sparkles,
   UserRound,
 } from "lucide-react";
 import { StudioSpaceLogo } from "@/components/brand/studiospace-logo";
@@ -92,112 +91,109 @@ function AccountAvatar({ user, compact = false }) {
 
 function AccountMenu({ user, onLogout, onNavigate, mobile = false }) {
   const [open, setOpen] = useState(false);
-  const closeTimer = useRef(null);
+  const [pointerInside, setPointerInside] = useState(false);
+  const tooltipId = useId();
   const label = user?.name || user?.email || "Your account";
   const buttonClass = mobile
     ? "flex w-full items-center justify-start gap-3 rounded-xl px-3 py-3 text-left"
     : "justify-start gap-2 px-2";
 
-  useEffect(
-    () => () => {
-      clearTimeout(closeTimer.current);
-    },
-    [],
-  );
-
-  function clearCloseTimer() {
-    clearTimeout(closeTimer.current);
-    closeTimer.current = null;
-  }
-
   function handleOpenChange(nextOpen) {
-    clearCloseTimer();
     setOpen(nextOpen);
   }
 
-  function handlePointerEnter(event) {
-    if (mobile || event.pointerType !== "mouse") return;
-    clearCloseTimer();
-    setOpen(true);
-  }
-
-  function handlePointerLeave(event) {
-    if (mobile || event.pointerType !== "mouse") return;
-    clearCloseTimer();
-    closeTimer.current = setTimeout(() => setOpen(false), 160);
-  }
+  const showTooltip = !mobile && pointerInside && !open;
 
   return (
-    <DropdownMenu onOpenChange={handleOpenChange} open={open}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          aria-label={`Open account menu for ${label}`}
-          className={buttonClass}
-          onPointerEnter={handlePointerEnter}
-          onPointerLeave={handlePointerLeave}
-          size={mobile ? "default" : "sm"}
-          type="button"
-          variant={mobile ? "ghost" : "outline"}
+    <div
+      className={`relative ${mobile ? "w-full" : ""}`}
+      onPointerEnter={(event) => {
+        if (!mobile && event.pointerType === "mouse") setPointerInside(true);
+      }}
+      onPointerLeave={(event) => {
+        if (!mobile && event.pointerType === "mouse") setPointerInside(false);
+      }}
+    >
+      <DropdownMenu onOpenChange={handleOpenChange} open={open}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            aria-describedby={showTooltip ? tooltipId : undefined}
+            aria-label={`Open account menu for ${label}`}
+            className={buttonClass}
+            size={mobile ? "default" : "sm"}
+            type="button"
+            variant={mobile ? "ghost" : "outline"}
+          >
+            <AccountAvatar compact={!mobile} user={user} />
+            <span className="min-w-0 truncate">{label}</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="w-[min(16rem,calc(100vw-2rem))]"
+          collisionPadding={12}
+          side="bottom"
+          sideOffset={8}
         >
-          <AccountAvatar compact={!mobile} user={user} />
-          <span className="min-w-0 truncate">{label}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-[min(16rem,calc(100vw-2rem))]"
-        collisionPadding={12}
-        onPointerEnter={clearCloseTimer}
-        onPointerLeave={handlePointerLeave}
-        side="bottom"
-        sideOffset={8}
-      >
-        <DropdownMenuLabel className="flex flex-col gap-1">
-          <span className="truncate">{user?.name || "StudioSpace member"}</span>
-          {user?.email ? (
-            <span className="truncate text-xs font-normal text-muted-foreground">
-              {user.email}
-            </span>
-          ) : null}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild onSelect={onNavigate}>
-          <Link href="/dashboard">
-            <LayoutDashboard aria-hidden="true" className="size-4" />
-            Dashboard
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild onSelect={onNavigate}>
-          <Link href="/dashboard/profile">
-            <UserRound aria-hidden="true" className="size-4" />
-            Edit Profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild onSelect={onNavigate}>
-          <Link href="/add-studio">
-            <PlusCircle aria-hidden="true" className="size-4" />
-            Add New Studio
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild onSelect={onNavigate}>
-          <Link href="/my-listings">
-            <ListChecks aria-hidden="true" className="size-4" />
-            My Studio Listings
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild onSelect={onNavigate}>
-          <Link href="/my-bookings">
-            <CalendarCheck aria-hidden="true" className="size-4" />
-            My Bookings
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={onLogout} variant="destructive">
-          <LogOut aria-hidden="true" className="size-4" />
-          Logout
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuLabel className="flex flex-col gap-1">
+            <span className="truncate">{user?.name || "StudioSpace member"}</span>
+            {user?.email ? (
+              <span className="truncate text-xs font-normal text-muted-foreground">
+                {user.email}
+              </span>
+            ) : null}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild onSelect={onNavigate}>
+            <Link href="/dashboard">
+              <LayoutDashboard aria-hidden="true" className="size-4" />
+              Dashboard
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild onSelect={onNavigate}>
+            <Link href="/dashboard/profile">
+              <UserRound aria-hidden="true" className="size-4" />
+              Edit Profile
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild onSelect={onNavigate}>
+            <Link href="/add-studio">
+              <PlusCircle aria-hidden="true" className="size-4" />
+              Add New Studio
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild onSelect={onNavigate}>
+            <Link href="/my-listings">
+              <ListChecks aria-hidden="true" className="size-4" />
+              My Studio Listings
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild onSelect={onNavigate}>
+            <Link href="/my-bookings">
+              <CalendarCheck aria-hidden="true" className="size-4" />
+              My Bookings
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={onLogout} variant="destructive">
+            <LogOut aria-hidden="true" className="size-4" />
+            Logout
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {showTooltip ? (
+        <div
+          className="pointer-events-auto absolute right-0 top-full z-50 mt-2 flex w-max max-w-[min(16rem,calc(100vw-2rem))] items-center gap-3 rounded-xl border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-lg"
+          id={tooltipId}
+          role="tooltip"
+        >
+          <AccountAvatar user={user} />
+          <span className="max-w-48 truncate text-sm font-medium">
+            {user?.name || "StudioSpace member"}
+          </span>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -227,11 +223,8 @@ function SiteHeaderFallback() {
             <Button asChild size="sm" variant="ghost">
               <Link href="/login">Log in</Link>
             </Button>
-            <Button asChild size="sm">
-              <Link href="/register">
-                <Sparkles aria-hidden="true" className="size-4" />
-                Get started
-              </Link>
+            <Button asChild size="sm" variant="ghost">
+              <Link href="/register">Register</Link>
             </Button>
           </div>
           <Sheet>
@@ -375,15 +368,8 @@ function SiteHeaderInner(){
                 </Link>
               </>
             )}
-            <Button asChild size="sm">
-              <Link href="/studios" prefetch={false}>
-                Host Your Space
-              </Link>
-            </Button>
           </div>
-          <div className="max-[360px]:hidden">
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button
@@ -475,15 +461,6 @@ function SiteHeaderInner(){
                   Appearance
                 </span>
                 <ThemeToggle />
-              </div>
-              <div className="mt-auto p-4">
-                <SheetClose asChild>
-                  <Button asChild className="w-full">
-                    <Link href="/studios" prefetch={false}>
-                      Host Your Space
-                    </Link>
-                  </Button>
-                </SheetClose>
               </div>
             </SheetContent>
           </Sheet>

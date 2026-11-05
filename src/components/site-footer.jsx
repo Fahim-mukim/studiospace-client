@@ -2,8 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { StudioSpaceLogo } from "@/components/brand/studiospace-logo";
 import { Container } from "@/components/container";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NewsletterSignup } from "@/components/newsletter-signup";
 import { studioCategories } from "@/data/homepage";
 
 const quickLinks = [
@@ -13,7 +12,7 @@ const quickLinks = [
   { href: "/#about", label: "About Us" },
   { href: "/login", label: "Login" },
   { href: "/register", label: "Register" },
-  { href: "/studios", label: "Host Your Space" },
+  { href: "/add-studio", label: "Host Your Space" },
 ];
 
 function XMark() {
@@ -85,27 +84,7 @@ export function SiteFooter() {
             <h2 className="text-sm font-semibold text-foreground">
               A note from StudioSpace
             </h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Newsletter updates are coming soon. Sign-up will open when the
-              service is ready.
-            </p>
-            <div className="mt-4 space-y-2">
-              <Label htmlFor="newsletter-email">Email address</Label>
-              <Input
-                autoComplete="email"
-                disabled
-                id="newsletter-email"
-                placeholder="Your email address"
-                type="email"
-              />
-              <button
-                className="h-10 w-full rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground opacity-60"
-                disabled
-                type="button"
-              >
-                Newsletter coming soon
-              </button>
-            </div>
+            <NewsletterSignup />
           </div>
         </div>
         <div className="mt-12 flex flex-col gap-4 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
@@ -115,7 +94,7 @@ export function SiteFooter() {
           </p>
           <Link
             className="inline-flex items-center gap-1 font-medium text-foreground"
-            href="/studios"
+            href="/add-studio"
             prefetch={false}
           >
             Host Your Space

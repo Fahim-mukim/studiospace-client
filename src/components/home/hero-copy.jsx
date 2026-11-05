@@ -23,7 +23,7 @@ export function HeroCopy() {
       <div className="mt-7 flex flex-wrap items-center gap-3">
         <Button
           asChild
-          className="bg-white text-foreground hover:bg-white/90"
+          className="bg-white text-stone-950 hover:bg-stone-100 hover:text-stone-950 active:bg-stone-200 active:text-stone-950 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:bg-white/70 disabled:text-stone-950/70"
           size="lg"
         >
           <Link href="/studios" prefetch={false}>
@@ -32,8 +32,8 @@ export function HeroCopy() {
           </Link>
         </Button>
         <Link
-          className="rounded-xl px-4 py-3 text-sm font-semibold text-white underline decoration-white/50 underline-offset-4 transition-colors hover:decoration-white focus-visible:outline-white"
-          href="/studios"
+          className="rounded-xl px-4 py-3 text-sm font-semibold text-white underline decoration-white/50 underline-offset-4 transition-colors hover:decoration-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+          href="/add-studio"
           prefetch={false}
         >
           Host Your Space
