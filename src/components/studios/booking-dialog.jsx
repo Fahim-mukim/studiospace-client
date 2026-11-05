@@ -164,5 +164,3 @@ export function BookingDialog({ studio }) {
     </Dialog>
   );
 }
-
-export { BookingDialog as BookingPreviewDialog };

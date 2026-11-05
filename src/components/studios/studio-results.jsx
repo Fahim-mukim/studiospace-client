@@ -364,7 +364,7 @@ export function StudioResults({
         </div>
       ) : loading ? (
         /* Loading Skeletons */
-        <div className="grid items-stretch gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-12">
+        <div className="grid grid-cols-1 items-stretch gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-12">
           {Array.from({ length: 6 }, (_, index) => (
             <div className="space-y-4" key={index}>
               <Skeleton className="aspect-[1.22] w-full rounded-[1.4rem]" />
@@ -377,7 +377,7 @@ export function StudioResults({
       ) : studios.length > 0 ? (
         /* Results Grid */
         <>
-          <div className="grid items-stretch gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-12">
+          <div className="grid grid-cols-1 items-stretch gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-12">
             {studios.map((studio) => (
               <StudioCard key={studio.id || studio.slug} studio={studio} />
             ))}

@@ -9,7 +9,7 @@ import {
   Star,
   UsersRound,
 } from "lucide-react";
-import { BookingPreviewDialog } from "@/components/studios/booking-preview-dialog";
+import { BookingDialog } from "@/components/studios/booking-dialog";
 import { StudioGallery } from "@/components/studios/studio-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -388,7 +388,7 @@ export default async function StudioDetailsPage({ params }) {
               </section>
             </div>
 
-            {/* Sidebar with Booking preview */}
+            {/* Sidebar with booking request */}
             <aside className="lg:sticky lg:top-24">
               <div className="rounded-3xl border border-border bg-card p-5 shadow-card sm:p-6">
                 <div className="flex items-baseline gap-2">
@@ -411,14 +411,14 @@ export default async function StudioDetailsPage({ params }) {
                     </span>
                   </p>
                 </div>
-                <BookingPreviewDialog studio={studio} />
+                <BookingDialog studio={studio} />
                 <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-muted-foreground">
                   <ShieldCheck
                     aria-hidden="true"
                     className="mt-0.5 size-4 shrink-0"
                   />
-                  Preview only. Availability, reservations, and payment are not
-                  connected.
+                  Booking requests stay Pending until the studio host confirms
+                  them.
                 </p>
               </div>
             </aside>

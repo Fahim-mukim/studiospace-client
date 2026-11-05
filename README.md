@@ -58,11 +58,16 @@ Git histories, and deployments.
   6 to 128 characters and contain at least one uppercase and one lowercase
   letter.
   A photo URL is optional.
-- Registration does not automatically sign in (`autoSignIn: false`). Continue
-  to `/login` and sign in explicitly. Better Auth intentionally returns a
-  success-shaped response for a duplicate email in this mode to prevent email
-  enumeration. The Client therefore says “Signup request received. Continue to
-  sign in.” and does not claim that a new account was created.
+- Registration signs the user in automatically (`autoSignIn: true`). Once
+  Better Auth creates the account, the Client refreshes the session and
+  redirects to the safe `returnTo` destination, or `/` when none was supplied,
+  so the authenticated navbar and protected routes are available immediately
+  and the session survives a page refresh. This is a deliberate, user-requested
+  deviation from the written assignment, which asks for a redirect to the Login
+  page after a successful signup; both behaviors are not claimed to be the
+  same. If Better Auth reports a failure — including an email address that is
+  already registered — the Client shows an error toast and does not redirect or
+  claim that an account was created.
 - Login at `/login` with email/password, or continue with Google.
 - Google OAuth requires the server-only Client variables
   `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. The local callback is

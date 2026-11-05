@@ -7,6 +7,14 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getMyBookings, cancelBooking } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
@@ -16,7 +24,8 @@ export default function MyBookingsPage() {
   const user = session?.user ?? null;
   const [bookings, setBookings] = useState([]);
   const [error, setError] = useState(null);
-  const [cancellingId, setCancellingId] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelPending, setCancelPending] = useState(false);
   const [fetchedUserId, setFetchedUserId] = useState(null);
   const loading = sessionPending || (Boolean(user) && fetchedUserId !== user?.id);
 
@@ -41,12 +50,18 @@ export default function MyBookingsPage() {
     };
   }, [shouldFetch, user?.id]);
 
-  async function handleCancel(id) {
-    if (cancellingId) return;
-    if (!confirm("Cancel this pending booking?")) return;
-    setCancellingId(id);
+  function handleCancelDialogChange(open) {
+    if (open) return;
+    if (cancelPending) return;
+    setCancelTarget(null);
+  }
+
+  async function handleConfirmCancel() {
+    if (!cancelTarget || cancelPending) return;
+    setCancelPending(true);
     try {
-      await cancelBooking(id);
+      await cancelBooking(cancelTarget.id);
+      setCancelTarget(null);
       toast.success("Booking cancelled successfully");
       if (user?.id) {
         setFetchedUserId(null);
@@ -54,7 +69,7 @@ export default function MyBookingsPage() {
     } catch (err) {
       toast.error(err?.message || "Failed to cancel booking");
     } finally {
-      setCancellingId(null);
+      setCancelPending(false);
     }
   }
 
@@ -140,10 +155,10 @@ export default function MyBookingsPage() {
                         <Button
                           variant="destructive"
                           size="sm"
-                          disabled={cancellingId === booking.id}
-                          onClick={() => handleCancel(booking.id)}
+                          disabled={cancelPending}
+                          onClick={() => setCancelTarget(booking)}
                         >
-                          {cancellingId === booking.id ? "Cancelling..." : "Cancel Booking"}
+                          Cancel Booking
                         </Button>
                       )}
                     </div>
@@ -155,6 +170,45 @@ export default function MyBookingsPage() {
         </Container>
       </main>
       <SiteFooter />
+
+      <Dialog
+        open={Boolean(cancelTarget)}
+        onOpenChange={handleCancelDialogChange}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+              Cancel booking
+            </p>
+            <DialogTitle className="font-display text-2xl leading-tight">
+              Cancel this booking?
+            </DialogTitle>
+            <DialogDescription>
+              {cancelTarget
+                ? `${cancelTarget.studioTitle || "This studio"} on ${cancelTarget.bookingDate} from ${cancelTarget.startTime} to ${cancelTarget.endTime} will be marked as Cancelled. This cannot be undone.`
+                : "This booking will be marked as Cancelled. This cannot be undone."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              disabled={cancelPending}
+              onClick={() => setCancelTarget(null)}
+              type="button"
+              variant="outline"
+            >
+              Keep booking
+            </Button>
+            <Button
+              disabled={cancelPending}
+              onClick={handleConfirmCancel}
+              type="button"
+              variant="destructive"
+            >
+              {cancelPending ? "Cancelling..." : "Yes, cancel booking"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

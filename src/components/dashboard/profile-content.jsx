@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useState } from "react";
 import { ArrowLeft, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
@@ -43,14 +44,22 @@ export function ProfileContent() {
 
   const values = { name: nameInput, image: imageInput };
 
-  function updateField(field, value) {
-    if (field === "name") setNameInput(value);
-    if (field === "image") setImageInput(value);
-    setErrors((current) => ({ ...current, [field]: undefined }));
+  // The session resolves after first mount, so seed the inputs from the stored
+  // profile as soon as the identity is known. Adjusting state during render
+  // (guarded by the previous id) avoids a cascading effect-driven render.
+  const userId = user?.id;
+  const userName = user?.name;
+  const userImage = user?.image;
+  const [seededUserId, setSeededUserId] = useState(null);
+  if (userId && seededUserId !== userId) {
+    setSeededUserId(userId);
+    setNameInput(typeof userName === "string" ? userName : "");
+    setImageInput(typeof userImage === "string" ? userImage : "");
   }
 
   function updateField(field, value) {
-    setValues((current) => ({ ...current, [field]: value }));
+    if (field === "name") setNameInput(value);
+    if (field === "image") setImageInput(value);
     setErrors((current) => ({ ...current, [field]: undefined }));
   }
 
@@ -76,6 +85,8 @@ export function ProfileContent() {
     try {
       const result = await authClient.updateUser({
         name: trimmedName,
+        // An empty value clears the photo; the server accepts an empty image
+        // (it is only validated when a real URL is present).
         ...(values.image.trim() ? { image: values.image.trim() } : { image: "" }),
       });
       if (result?.error) {
@@ -121,7 +132,14 @@ export function ProfileContent() {
             <div className="mb-6 flex items-center gap-4 rounded-3xl border border-border bg-card p-6 shadow-card">
               <div className="relative flex size-16 items-center justify-center overflow-hidden rounded-full bg-secondary text-lg font-semibold text-secondary-foreground">
                 {user?.image ? (
-                  <img alt={user.name || "User avatar"} className="h-full w-full object-cover" src={user.image} />
+                  <Image
+                    alt={user.name || "User avatar"}
+                    className="object-cover"
+                    fill
+                    sizes="64px"
+                    src={user.image}
+                    unoptimized
+                  />
                 ) : (
                   getInitials(user)
                 )}
