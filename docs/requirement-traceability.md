@@ -28,7 +28,7 @@ described as passing unless it was run successfully.
 | Client-side Better Auth; Express verifies Client identity | PASS | `src/lib/auth.js`, `src/app/api/auth/[...all]/route.js`, `src/lib/auth-client.js`; Server `src/middleware/require-auth.js`, `index.js` | Source verified. Protected Express APIs verify the JWT-backed session-data cookie against the Client JWKS endpoint; the opaque session-token cookie is not treated as a JWT. |
 | MongoDB ownership | PASS | `src/lib/auth.js`; Server `src/config/database.js`, `index.js` | Source verified: Client runtime owns Better Auth `user`, `account`, `session`, and `jwks` collections; Express owns marketplace `studios` and `bookings`. The browser does not connect to MongoDB. |
 | Configurable API base URL | PASS | `.env.example`, `src/lib/api.js`, `src/lib/marketplace-proxy.js` | Source verified: `NEXT_PUBLIC_API_BASE_URL` configures public Express reads; server-only `SERVER_API_BASE_URL` configures the authenticated BFF upstream. Both default to `http://localhost:5000` in the example environment. Authentication secrets and the BFF upstream URL remain server-only. |
-| Authenticated cross-origin marketplace requests | PARTIAL | `src/app/api/marketplace/[...path]/route.js`, `src/lib/marketplace-proxy.js`, `src/lib/api.js` | Protected browser requests use a same-origin BFF with a strict route/method allowlist, mutation Origin checks, and filtered Better Auth session-data cookie forwarding. Mocked-upstream tests cover forwarding and rejection behavior. Authenticated deployment/browser verification remains dependent on the Client/Server origins, CORS and JWKS configuration. Public studio reads remain direct Express requests. |
+| Authenticated cross-origin marketplace requests | PARTIAL | `src/app/api/marketplace/[...path]/route.js`, `src/lib/marketplace-proxy.js`, `src/lib/api.js` | Source implementation and mocked-upstream unit tests cover the allowlist, methods, Origin/content-type checks, and filtered session-data cookie forwarding. In the current browser session, unauthenticated `GET /api/marketplace/studios/mine` returned HTTP 401 through the BFF, while direct public `GET /api/studios` returned HTTP 200. An authenticated Client → BFF → Express → JWKS request was not run: no explicit isolated test database is configured. Production behavior remains unverified. |
 | Independent environments and deployment | PASS | Client and Server `.env.example` files and package manifests; both repositories | Source/repository boundaries verified. Production deployment, domain, and cookie transport have not been verified. See the Server README. |
 
 ## Authentication
@@ -73,12 +73,12 @@ described as passing unless it was run successfully.
 
 | Area | Status | Source evidence | Verification and remaining limitation |
 |---|---|---|---|
-| Booking request creation and persistence | PASS | `src/components/studios/booking-dialog.jsx`, `src/lib/api.js`; `POST /api/bookings` | Source submits an authenticated request that the Server persists in MongoDB with `Pending` status. The server derives user identity and studio/rate from stored records. No dedicated booking route test exists; behavior has not been verified against a live database in this audit. |
+| Booking request creation and persistence | PASS | `src/components/studios/booking-dialog.jsx`, `src/lib/api.js`; Server `tests/bookings.test.js`; `POST /api/bookings` | The Server has 30 booking-focused route-test cases using an isolated in-memory mock with production route registration. They cover creation and server-derived values, lookup, validation, confirmed/pending overlaps and adjacent windows, ownership-filtered My Bookings, cancellation/status validation, and authentication. These tests do not establish real MongoDB persistence. The latest Server suite run in this milestone passed 155 tests, failed 0, and skipped 1 timezone-conditional test. The DST duration case was separately reported as 30/30 passing in the supplied historical verification; it was not rerun under `America/New_York` in this milestone. Live database booking persistence remains unverified. |
 | Booking messaging | PASS | `src/app/page.js`, `src/app/studios/[id]/page.js`, `src/components/studios/booking-dialog.jsx` | Copy now distinguishes persisted Pending requests from unavailable host confirmation and payment processing. Source updated; no browser copy verification in this milestone. |
 | Server-side total | PASS | Server `index.js` booking handler | Source calculates rounded hourly rate × duration (maximum 24 hours); it does not include security deposit. Do not infer assignment pricing compliance because the original assignment price rule is unavailable. |
 | Confirmed overlap | PARTIAL | Server `index.js` booking handler; `409 BOOKING_CONFLICT` | Handler checks for an overlapping `Confirmed` booking and returns HTTP 409. It then inserts in a separate operation; there is no atomic reservation/unique-window enforcement, and concurrent requests can race. Pending bookings do not block another request. |
-| My Bookings | PASS | `src/app/my-bookings/page.js`, `src/lib/api.js`; `GET /api/bookings/mine` | Source returns only the authenticated user's bookings, newest first; UI shows status, summary, loading/error/retry and empty states. No dedicated booking endpoint test. |
-| Pending booking cancellation | PASS | `src/app/my-bookings/page.js`, `src/lib/api.js`; `PATCH /api/bookings/:id/cancel` | Source enforces owner-only cancellation and changes only `Pending` to `Cancelled`. Non-owner gets 403, missing ID/record 404, non-pending state 400. No dedicated booking endpoint test. |
+| My Bookings | PASS | `src/app/my-bookings/page.js`, `src/lib/api.js`; Server `tests/bookings.test.js`; `GET /api/bookings/mine` | Source returns only the authenticated user's bookings, newest first; UI shows status, summary, loading/error/retry and empty states. Server route tests cover ownership filtering and empty results using an isolated in-memory mock, not real MongoDB persistence. |
+| Pending booking cancellation | PASS | `src/app/my-bookings/page.js`, `src/lib/api.js`; Server `tests/bookings.test.js`; `PATCH /api/bookings/:id/cancel` | Source enforces owner-only cancellation and changes only `Pending` to `Cancelled`. Server route tests cover owner cancellation, non-owner rejection, missing records, and invalid statuses using an isolated in-memory mock; they do not establish real MongoDB persistence. |
 | Host approval or confirmation | FAIL | Server `index.js` has no booking approval/confirmation route | No API or UI to change a pending request to `Confirmed`. The overlap check recognizes confirmed records but current routes do not create them. `Completed` is display-handled in Client UI but is not produced by these Server routes. |
 
 ## Dashboard and profile
@@ -94,15 +94,15 @@ described as passing unless it was run successfully.
 |---|---|---|---|
 | Responsive layouts and controls | PARTIAL | `src/app/`, `src/components/` | Responsive breakpoints and accessible labels/states are visible in source. Historical Phase O.4.1A browser measurements found no horizontal overflow at 320, 375, 768, 1024, and 1440 CSS pixels after a card sizing fix; this is historical homepage-only evidence, not a current full-site retest. |
 | Loading, error, empty, not-found states | PASS | Homepage, Explore, detail, listings, dashboard and booking pages cited above | Source inspection confirms states; runtime branch coverage is incomplete. |
-| Automated Client checks | PARTIAL | `tests/api.test.mjs`, `tests/safe-return-to.test.mjs`, `tests/signup-session.test.mjs`, `tests/auth.integration.test.mjs` | Current milestone checks have not yet been rerun. The opt-in MongoDB test requires dedicated configuration and its assertions are not evidence of persistence until it runs successfully. |
+| Automated Client checks | PARTIAL | `tests/api.test.mjs`, `tests/marketplace-proxy.test.mjs`, `tests/safe-return-to.test.mjs`, `tests/signup-session.test.mjs`, `tests/auth.integration.test.mjs` | Verified in this milestone: `npm test` passed 20, failed 0, skipped 1; `npm run lint` and `npm run build` passed. The skipped opt-in auth integration test requires explicit `MONGODB_TEST_URI` and `MONGODB_TEST_DB_NAME`; those variables are absent, so signup/session persistence was not verified. |
 | Original assignment compliance | BLOCKED | Original assignment document not located | This traceability document records implementation evidence only; it does not certify compliance with unavailable source requirements. |
 
 ## Next recommended milestone
 
-Run the authentication integration test against an explicitly configured
-dedicated test database. Decide separately whether to change Better Auth's
-duplicate-email API behavior without weakening `autoSignIn: true`; the current
-Client UI is neutral, but the 422 status/code remain externally visible.
-Separately, add booking route tests and define an approval/confirmation
-workflow before describing requests as confirmed or enforcing reservation
-availability.
+Run the authenticated browser integration workflow only after an explicitly
+isolated test database is configured for both independent applications. Verify
+signup/session persistence, BFF cookie forwarding, Express JWKS validation,
+and protected studio/booking operations without touching development or
+production data. The existing booking route tests use an in-memory mock and do
+not replace this live integration check. Separately, define an approval/
+confirmation workflow before describing Pending requests as confirmed.
