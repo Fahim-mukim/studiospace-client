@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   ApiError,
   buildApiUrl,
+  deleteStudio,
   getStudios,
   normalizeStudio,
 } from "../src/lib/api.js";
@@ -170,4 +171,71 @@ test("ApiError retains status, code, and details", () => {
   assert.equal(error.status, 404);
   assert.equal(error.code, "STUDIO_NOT_FOUND");
   assert.deepEqual(error.details, { lookup: "123" });
+});
+
+test("deleteStudio uses the same-origin BFF, DELETE, credentials, and safe identifier encoding", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl;
+  let requestOptions;
+  globalThis.fetch = async (url, options) => {
+    requestedUrl = String(url);
+    requestOptions = options;
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Studio deleted successfully",
+        data: { id: "deleted-studio" },
+      }),
+      { headers: { "content-type": "application/json" } },
+    );
+  };
+
+  try {
+    const result = await deleteStudio("loft & lights", {
+      credentials: "omit",
+      cache: "no-store",
+    });
+
+    assert.equal(
+      new URL(requestedUrl, "http://localhost:3000").pathname,
+      "/api/marketplace/studios/loft%20%26%20lights",
+    );
+    assert.equal(requestOptions.method, "DELETE");
+    assert.equal(requestOptions.credentials, "include");
+    assert.equal(requestOptions.cache, "no-store");
+    assert.equal("body" in requestOptions, false);
+    assert.deepEqual(result, {
+      success: true,
+      message: "Studio deleted successfully",
+      studioId: "deleted-studio",
+      data: { id: "deleted-studio" },
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("deleteStudio preserves standardized API errors", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response(
+      JSON.stringify({
+        success: false,
+        message: "This studio has booking history",
+        code: "STUDIO_HAS_BOOKINGS",
+        details: null,
+      }),
+      { status: 409, headers: { "content-type": "application/json" } },
+    );
+
+  try {
+    await assert.rejects(deleteStudio("daylight-studio"), {
+      name: "ApiError",
+      status: 409,
+      code: "STUDIO_HAS_BOOKINGS",
+      message: "This studio has booking history",
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

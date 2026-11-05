@@ -4,6 +4,7 @@ import {
   cancelBooking,
   createBooking,
   createStudio,
+  deleteStudio,
   getMyBookings,
   getMyStudios,
   updateStudio,
@@ -47,6 +48,7 @@ test("forwards only allowlisted routes and their permitted methods", async () =>
     ["POST", "studios", "/api/studios"],
     ["GET", "studios/mine", "/api/studios/mine"],
     ["PATCH", "studios/creative-loft_1", "/api/studios/creative-loft_1"],
+    ["DELETE", "studios/creative-loft_1", "/api/studios/creative-loft_1"],
     ["POST", "bookings", "/api/bookings"],
     ["GET", "bookings/mine", "/api/bookings/mine"],
     [
@@ -60,7 +62,7 @@ test("forwards only allowlisted routes and their permitted methods", async () =>
     let calledUrl;
     const request = makeRequest(path, {
       method,
-      ...(method === "GET" ? {} : { body: "{}" }),
+      ...(["POST", "PATCH"].includes(method) ? { body: "{}" } : {}),
     });
     const response = await handleMarketplaceProxy(request, {
       env,
@@ -111,6 +113,19 @@ test("rejects unknown, encoded, traversal, and unsupported-method paths", async 
   );
   assert.equal(wrongMethod.status, 405);
   assert.equal(wrongMethod.headers.get("allow"), "GET");
+  const wrongDeleteMethod = await handleMarketplaceProxy(
+    makeRequest("studios/mine", { method: "DELETE" }),
+    { env, fetchImpl },
+  );
+  assert.equal(wrongDeleteMethod.status, 405);
+  assert.equal(wrongDeleteMethod.headers.get("allow"), "GET");
+  const unknownDelete = await handleMarketplaceProxy(
+    makeRequest("bookings/65c7a6b0c9d2fddc4493e001/cancel/extra", {
+      method: "DELETE",
+    }),
+    { env, fetchImpl },
+  );
+  assert.equal(unknownDelete.status, 404);
   assert.equal(upstreamCalls, 0);
 });
 
@@ -249,6 +264,10 @@ test("requires same-origin JSON mutations and never calls Express for invalid CS
       body: "{}",
       headers: { origin: "https://client.example.evil" },
     }),
+    makeRequest("studios/creative-loft_1", {
+      method: "DELETE",
+      headers: { origin: "https://attacker.example" },
+    }),
   ];
 
   for (const request of requests) {
@@ -324,6 +343,7 @@ test("routes protected Client API helpers through the same-origin proxy", async 
     await createStudio({ title: "Studio" });
     await getMyStudios();
     await updateStudio("studio-id", { title: "Updated" });
+    await deleteStudio("studio-id");
     await createBooking({ studioId: "studio-id" });
     await getMyBookings();
     await cancelBooking("65c7a6b0c9d2fddc4493e001");
@@ -337,6 +357,7 @@ test("routes protected Client API helpers through the same-origin proxy", async 
       ["/api/marketplace/studios", "POST"],
       ["/api/marketplace/studios/mine", "GET"],
       ["/api/marketplace/studios/studio-id", "PATCH"],
+      ["/api/marketplace/studios/studio-id", "DELETE"],
       ["/api/marketplace/bookings", "POST"],
       ["/api/marketplace/bookings/mine", "GET"],
       [
@@ -346,4 +367,38 @@ test("routes protected Client API helpers through the same-origin proxy", async 
     ],
   );
   assert.ok(requested.every(({ options }) => options.credentials === "include"));
+});
+
+test("DELETE studio forwards only the session-data cookie and never the opaque session token", async () => {
+  let upstreamOptions;
+  const response = await handleMarketplaceProxy(
+    makeRequest("studios/creative-loft_1", {
+      method: "DELETE",
+      headers: {
+        cookie:
+          "unrelated=secret; better-auth.session_token=opaque; better-auth.session_data=jwt%2Bvalue",
+        authorization: "Bearer do-not-forward",
+      },
+    }),
+    {
+      env,
+      fetchImpl: async (_url, options) => {
+        upstreamOptions = options;
+        return jsonResponse({
+          success: true,
+          message: "Studio deleted successfully",
+        });
+      },
+    },
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(upstreamOptions.method, "DELETE");
+  assert.equal(upstreamOptions.body, undefined);
+  assert.equal(
+    upstreamOptions.headers.get("cookie"),
+    "better-auth.session_data=jwt%2Bvalue",
+  );
+  assert.equal(upstreamOptions.headers.has("authorization"), false);
+  assert.equal(response.headers.get("cache-control"), "no-store");
 });

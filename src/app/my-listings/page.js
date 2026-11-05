@@ -1,15 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { AlertCircle, Plus, RotateCcw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AlertCircle, LoaderCircle, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { StudioCard } from "@/components/home/studio-card";
-import { getMyStudios } from "@/lib/api";
+import { deleteStudio, getMyStudios } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
+
+function getDeleteErrorMessage(error) {
+  if (error?.status === 403) {
+    return "You do not have permission to delete this studio.";
+  }
+  if (error?.status === 404) {
+    return "This studio could not be found. Refresh your listings and try again.";
+  }
+  if (error?.status === 409 || error?.code === "STUDIO_HAS_BOOKINGS") {
+    return "This studio has booking history and cannot be deleted.";
+  }
+  if (error?.code === "NETWORK_ERROR") {
+    return "Unable to reach StudioSpace. Check your connection and try again.";
+  }
+  if (error?.status === 503) {
+    return "StudioSpace is temporarily unavailable. Please try again.";
+  }
+  return error?.message || "Unable to delete this studio. Please try again.";
+}
 
 function StudioCardSkeleton() {
   return (
@@ -30,6 +58,9 @@ export default function MyListingsPage() {
   const [studios, setStudios] = useState([]);
   const [error, setError] = useState(null);
   const [hasFetched, setHasFetched] = useState(false);
+  const [studioToDelete, setStudioToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deletionInProgress = useRef(false);
   const loading = sessionPending || (Boolean(user) && !hasFetched && !error);
 
   useEffect(() => {
@@ -76,6 +107,30 @@ export default function MyListingsPage() {
         );
         setHasFetched(true);
       });
+  }
+
+  async function handleDeleteStudio() {
+    if (!studioToDelete || deletionInProgress.current) return;
+
+    deletionInProgress.current = true;
+    setIsDeleting(true);
+    try {
+      const result = await deleteStudio(studioToDelete.slug || studioToDelete.id);
+      if (!result.success) {
+        throw new Error(result.message || "Unable to delete this studio.");
+      }
+
+      setStudios((current) =>
+        current.filter((studio) => studio.id !== studioToDelete.id),
+      );
+      setStudioToDelete(null);
+      toast.success(result.message || "Studio deleted successfully.");
+    } catch (deleteError) {
+      toast.error(getDeleteErrorMessage(deleteError));
+    } finally {
+      deletionInProgress.current = false;
+      setIsDeleting(false);
+    }
   }
 
   return (
@@ -163,15 +218,74 @@ export default function MyListingsPage() {
               {studios.map((studio) => (
                 <div key={studio.id || studio.slug} className="flex h-full flex-col gap-2">
                   <StudioCard studio={studio} />
-                  <Button asChild variant="outline" size="sm" className="w-full">
-                    <Link href={`/studios/edit/${encodeURIComponent(studio.slug || studio.id)}`}>
-                      Edit studio
-                    </Link>
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button asChild variant="outline" size="sm" className="w-full">
+                      <Link href={`/studios/edit/${encodeURIComponent(studio.slug || studio.id)}`}>
+                        Edit studio
+                      </Link>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="w-full"
+                      aria-label={`Delete ${studio.title || studio.name}`}
+                      onClick={() => setStudioToDelete(studio)}
+                    >
+                      <Trash2 aria-hidden="true" />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
+
+          <Dialog
+            open={Boolean(studioToDelete)}
+            onOpenChange={(open) => {
+              if (!open && !isDeleting) setStudioToDelete(null);
+            }}
+          >
+            <DialogContent
+              className="max-h-[90vh] overflow-y-auto"
+              showCloseButton={!isDeleting}
+            >
+              <DialogHeader>
+                <DialogTitle className="font-display text-2xl">
+                  Delete {studioToDelete?.title || studioToDelete?.name || "studio"}?
+                </DialogTitle>
+                <DialogDescription>
+                  This permanently removes the listing. Studios with booking
+                  history cannot be deleted. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isDeleting}
+                  onClick={() => setStudioToDelete(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isDeleting}
+                  aria-busy={isDeleting}
+                  onClick={handleDeleteStudio}
+                >
+                  {isDeleting ? (
+                    <LoaderCircle aria-hidden="true" className="animate-spin" />
+                  ) : (
+                    <Trash2 aria-hidden="true" />
+                  )}
+                  {isDeleting ? "Deleting…" : "Delete studio"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </Container>
       </main>
       <SiteFooter />

@@ -388,6 +388,28 @@ export async function updateStudio(idOrSlug, studioData, options = {}) {
   };
 }
 
+export async function deleteStudio(idOrSlug, options = {}) {
+  if (!idOrSlug) {
+    throw new ApiError("Studio ID or slug is required", { status: 400 });
+  }
+
+  const result = await fetchMarketplaceApi(
+    `/studios/${encodeURIComponent(idOrSlug)}`,
+    {
+      method: "DELETE",
+      ...options,
+      credentials: "include",
+    },
+  );
+
+  return {
+    success: Boolean(result?.success),
+    message: result?.message || "",
+    studioId: result?.data?.id || null,
+    data: result?.data || null,
+  };
+}
+
 export async function createBooking(bookingData, options = {}) {
   const result = await fetchMarketplaceApi("/bookings", {
     method: "POST",

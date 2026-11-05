@@ -40,7 +40,7 @@ function getAllowedEndpoint(method, pathname) {
     { path: "studios/mine", method: "GET", upstreamPath: "/api/studios/mine" },
     {
       pattern: /^studios\/[A-Za-z0-9][A-Za-z0-9_-]{0,159}$/,
-      method: "PATCH",
+      methods: ["PATCH", "DELETE"],
       upstreamPath: (candidate) =>
         `/api/studios/${candidate.slice("studios/".length)}`,
     },
@@ -57,8 +57,9 @@ function getAllowedEndpoint(method, pathname) {
     entry.path === path || entry.pattern?.test(path),
   );
   if (!candidate) return { kind: "not-found" };
-  if (candidate.method !== method) {
-    return { kind: "method-not-allowed", allow: candidate.method };
+  const methods = candidate.methods || [candidate.method];
+  if (!methods.includes(method)) {
+    return { kind: "method-not-allowed", allow: methods.join(", ") };
   }
 
   return {
@@ -230,6 +231,7 @@ export async function handleMarketplaceProxy(
 
   const method = request.method.toUpperCase();
   const hasBody = method === "POST" || method === "PATCH";
+  const isMutation = hasBody || method === "DELETE";
   if (hasBody) {
     const contentType = request.headers.get("content-type") || "";
     if (contentType.split(";", 1)[0].trim().toLowerCase() !== "application/json") {
@@ -240,7 +242,9 @@ export async function handleMarketplaceProxy(
         details: null,
       });
     }
+  }
 
+  if (isMutation) {
     const trustedOrigin = getTrustedClientOrigin(env);
     if (!trustedOrigin) {
       return jsonResponse(503, {

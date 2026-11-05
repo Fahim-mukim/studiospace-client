@@ -11,3 +11,7 @@ export function POST(request) {
 export function PATCH(request) {
   return handleMarketplaceProxy(request);
 }
+
+export function DELETE(request) {
+  return handleMarketplaceProxy(request);
+}
