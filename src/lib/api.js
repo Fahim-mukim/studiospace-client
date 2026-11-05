@@ -1,7 +1,12 @@
 export function getApiBaseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
-  ).replace(/\/+$/, "");
+  const configuredUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (!configuredUrl && process.env.NODE_ENV === "production") {
+    throw new ApiError("The marketplace API is not configured.", {
+      status: 503,
+      code: "API_NOT_CONFIGURED",
+    });
+  }
+  return (configuredUrl || "http://localhost:5000").replace(/\/+$/, "");
 }
 
 export class ApiError extends Error {
@@ -253,7 +258,8 @@ export async function getStudios(params = {}, options = {}) {
     if (
       params.sort === "newest" ||
       params.sort === "price-low" ||
-      params.sort === "price-high"
+      params.sort === "price-high" ||
+      params.sort === "rating"
     ) {
       query.sort = params.sort;
     } else if (params.sort === "recommended") {
@@ -279,11 +285,7 @@ export async function getStudios(params = {}, options = {}) {
   });
 
   const rawList = Array.isArray(result?.data) ? result.data : [];
-  let studios = rawList.map(normalizeStudio);
-
-  if (params.sort === "rating") {
-    studios = [...studios].sort((a, b) => b.ratingValue - a.ratingValue);
-  }
+  const studios = rawList.map(normalizeStudio);
 
   const pagination = result?.pagination || {
     page: Number(query.page) || 1,

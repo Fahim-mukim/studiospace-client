@@ -150,7 +150,7 @@ function getTrustedClientOrigin(env) {
 }
 
 function getUpstreamBaseUrl(env) {
-  const configuredUrl = env.SERVER_API_BASE_URL || env.NEXT_PUBLIC_API_BASE_URL;
+  const configuredUrl = env.SERVER_API_BASE_URL;
   if (typeof configuredUrl !== "string" || !configuredUrl) return null;
 
   try {

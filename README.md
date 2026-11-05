@@ -14,8 +14,7 @@ Git histories, and deployments.
 
 ## Project and assignment information
 
-- **Live website:** Pending user input. No verified production Client URL is
-  present in the repository or deployment metadata available in this checkout.
+- **Live website:** https://studiospace-client-nine-psi.vercel.app
 - **Examiner test credentials:** Pending user input. Do not publish real
   account passwords or secrets in this README.
 
@@ -23,7 +22,8 @@ Git histories, and deployments.
 
 - Email/password registration and login with Better Auth.
 - Google OAuth login and registration when both server-only Google credentials
-  are configured; deployed OAuth has not yet been verified.
+  are configured; the project owner confirms both email/password and Google
+  registration/login work in the current production deployment.
 - Session-protected dashboard, studio listings, and booking views.
 - Marketplace studio search, details, owner listing, creation, editing, and
   deletion through the independent Express API.
@@ -64,9 +64,10 @@ Git histories, and deployments.
    ```
 
    Keep `NEXT_PUBLIC_API_BASE_URL` set to the Express API origin
-   (`http://localhost:5000` by default) for public studio reads. Set the
-   server-only `SERVER_API_BASE_URL` to that same Express origin for protected
-   marketplace requests forwarded by the Next.js BFF. Never add a
+   (`http://localhost:5000` by default in development) for public studio reads.
+   It is required in production; the Client will not fall back to localhost
+   there. Set the server-only `SERVER_API_BASE_URL` to that same Express origin
+   for protected marketplace requests forwarded by the Next.js BFF. Never add a
    `NEXT_PUBLIC_` prefix to MongoDB, Better Auth, or upstream API configuration.
 
 4. Configure and run the Express Server from its own checkout and environment.
@@ -165,9 +166,10 @@ production database.
 ## Marketplace and Express API
 
 The browser uses `NEXT_PUBLIC_API_BASE_URL` for public Express marketplace
-reads (default: `http://localhost:5000`); protected requests use the Next.js
-same-origin BFF, which forwards to the server-only `SERVER_API_BASE_URL`
-(default: `http://localhost:5000`). The browser never connects to MongoDB.
+reads (default: `http://localhost:5000` in development; required in production);
+protected requests use the Next.js same-origin BFF, which forwards to the
+server-only `SERVER_API_BASE_URL` (required at runtime). The browser never
+connects to MongoDB.
 Configure both API origins independently from the Client's server-only
 authentication variables. Run the Express Server from its own checkout and
 configure its `CLIENT_URL`, `CLIENT_AUTH_URL`, and MongoDB variables there.

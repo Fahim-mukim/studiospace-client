@@ -4,9 +4,35 @@ import {
   ApiError,
   buildApiUrl,
   deleteStudio,
+  getApiBaseUrl,
   getStudios,
   normalizeStudio,
 } from "../src/lib/api.js";
+
+test("getApiBaseUrl does not fall back to localhost in production", () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+  const originalApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  process.env.NODE_ENV = "production";
+  delete process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  try {
+    assert.throws(getApiBaseUrl, {
+      name: "ApiError",
+      status: 503,
+      code: "API_NOT_CONFIGURED",
+    });
+    process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.example/";
+    assert.equal(getApiBaseUrl(), "https://api.example");
+  } finally {
+    if (originalNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = originalNodeEnv;
+    if (originalApiBaseUrl === undefined) {
+      delete process.env.NEXT_PUBLIC_API_BASE_URL;
+    } else {
+      process.env.NEXT_PUBLIC_API_BASE_URL = originalApiBaseUrl;
+    }
+  }
+});
 
 test("buildApiUrl formats URLs and query parameters correctly", () => {
   const url1 = buildApiUrl("/api/studios");
@@ -83,6 +109,43 @@ test("getStudios requests the selected search, category, limit, and sort without
     assert.equal(requestOptions.cache, "no-store");
     assert.equal(result.studios.length, 1);
     assert.equal(result.studios[0].title, studio.title);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("getStudios delegates rating order to the server before pagination", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl;
+  const serverOrderedStudios = [
+    { id: "lower-rated", title: "Lower Rated", rating: "3.5", reviewCount: 2 },
+    { id: "higher-rated", title: "Higher Rated", rating: "5", reviewCount: 1 },
+  ];
+  globalThis.fetch = async (url) => {
+    requestedUrl = String(url);
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: serverOrderedStudios,
+        pagination: { page: 2, limit: 1, total: 2, totalPages: 2 },
+      }),
+      { headers: { "content-type": "application/json" } },
+    );
+  };
+
+  try {
+    const result = await getStudios({ sort: "rating", page: 2, limit: 1 });
+    const url = new URL(requestedUrl);
+
+    assert.equal(url.searchParams.get("sort"), "rating");
+    assert.equal(url.searchParams.get("page"), "2");
+    assert.equal(url.searchParams.get("limit"), "1");
+    assert.deepEqual(
+      result.studios.map((studio) => studio.id),
+      ["lower-rated", "higher-rated"],
+      "The Client must preserve the server's globally sorted page order.",
+    );
+    assert.equal(result.pagination.page, 2);
   } finally {
     globalThis.fetch = originalFetch;
   }

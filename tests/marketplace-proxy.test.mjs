@@ -297,12 +297,48 @@ test("uses configured upstream rather than request host and forwards no cookie i
   assert.equal(response.status, 401);
 });
 
+test("preserves meaningful Server error status and JSON body", async () => {
+  const serverError = {
+    success: false,
+    message: "This studio cannot be deleted because it has booking history",
+    code: "STUDIO_HAS_BOOKINGS",
+    details: null,
+  };
+  const response = await handleMarketplaceProxy(
+    makeRequest("studios/creative-loft_1", { method: "DELETE" }),
+    {
+      env,
+      fetchImpl: async () => jsonResponse(serverError, 409),
+    },
+  );
+
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), serverError);
+});
+
 test("returns safe errors for missing configuration, upstream failures, and redirects", async () => {
   const missingConfig = await handleMarketplaceProxy(
     makeRequest("studios/mine"),
     { env: {}, fetchImpl: async () => jsonResponse({}) },
   );
   assert.equal(missingConfig.status, 503);
+
+  let publicUrlFallbackCalls = 0;
+  const publicUrlFallback = await handleMarketplaceProxy(
+    makeRequest("studios/mine"),
+    {
+      env: {
+        BETTER_AUTH_URL: clientOrigin,
+        NEXT_PUBLIC_API_BASE_URL: upstreamOrigin,
+      },
+      fetchImpl: async () => {
+        publicUrlFallbackCalls += 1;
+        return jsonResponse({});
+      },
+    },
+  );
+  assert.equal(publicUrlFallback.status, 503);
+  assert.equal(publicUrlFallbackCalls, 0);
 
   const networkFailure = await handleMarketplaceProxy(
     makeRequest("studios/mine"),
