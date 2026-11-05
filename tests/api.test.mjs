@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   ApiError,
   buildApiUrl,
+  getStudios,
   normalizeStudio,
 } from "../src/lib/api.js";
 
@@ -28,6 +29,62 @@ test("buildApiUrl formats URLs and query parameters correctly", () => {
   assert.equal(parsed.searchParams.has("empty"), false);
   assert.equal(parsed.searchParams.has("skipped"), false);
   assert.equal(parsed.searchParams.has("nil"), false);
+});
+
+test("getStudios requests the selected search, category, limit, and sort without caching", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl;
+  let requestOptions;
+  const studio = {
+    id: "studio-123",
+    title: "Brooklyn Photo Studio",
+    slug: "brooklyn-photo-studio",
+    category: "Photo Studios",
+    categorySlug: "photo-studios",
+    hourlyRate: 95,
+    capacity: 8,
+    location: "Brooklyn, New York",
+    image: "https://example.com/studio.jpg",
+    amenities: ["Natural light"],
+    overview: "A bright studio for creative photo sessions.",
+  };
+
+  globalThis.fetch = async (url, options) => {
+    requestedUrl = String(url);
+    requestOptions = options;
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: [studio],
+        pagination: { page: 1, limit: 6, total: 1, totalPages: 1 },
+      }),
+      { headers: { "content-type": "application/json" } },
+    );
+  };
+
+  try {
+    const result = await getStudios(
+      {
+        search: "Brooklyn",
+        category: "photo-studios",
+        limit: 6,
+        sort: "newest",
+      },
+      { cache: "no-store" },
+    );
+    const url = new URL(requestedUrl);
+
+    assert.equal(url.pathname, "/api/studios");
+    assert.equal(url.searchParams.get("search"), "Brooklyn");
+    assert.equal(url.searchParams.get("category"), "photo-studios");
+    assert.equal(url.searchParams.get("limit"), "6");
+    assert.equal(url.searchParams.get("sort"), "newest");
+    assert.equal(requestOptions.cache, "no-store");
+    assert.equal(result.studios.length, 1);
+    assert.equal(result.studios[0].title, studio.title);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test("normalizeStudio handles server studio records cleanly", () => {

@@ -1,5 +1,3 @@
-export { featuredStudios } from "@/data/studios";
-
 export const heroSlides = [
   {
     image: "/images/hero/interior-studio.jpg",

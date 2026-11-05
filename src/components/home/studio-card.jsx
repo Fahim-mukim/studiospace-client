@@ -32,7 +32,7 @@ export function StudioCard({ studio }) {
     (studio.image.startsWith("http://") || studio.image.startsWith("https://"));
 
   return (
-    <HoverLift className="h-full">
+    <HoverLift className="h-full min-w-0">
       <article className="group h-full">
         <Link
           aria-label={`Explore ${displayName} in ${displayLocation}`}

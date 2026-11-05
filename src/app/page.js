@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -29,7 +30,7 @@ import {
   hostAssurances,
   studioCategories,
 } from "@/data/homepage";
-import { featuredStudios } from "@/data/studios";
+import { getStudios } from "@/lib/api";
 
 export const metadata = {
   title: "Creative studio spaces for every idea",
@@ -45,6 +46,80 @@ const categoryIcons = {
   "art-workshops": UsersRound,
 };
 
+function FeaturedStudiosFallback() {
+  return (
+    <div
+      aria-label="Loading featured studios"
+      aria-live="polite"
+      className="mt-9 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-12"
+      role="status"
+    >
+      {Array.from({ length: 6 }, (_, index) => (
+        <div aria-hidden="true" className="animate-pulse" key={index}>
+          <div className="aspect-[1.22] rounded-[1.4rem] bg-muted" />
+          <div className="mt-4 h-5 w-2/3 rounded bg-muted" />
+          <div className="mt-3 h-4 w-1/2 rounded bg-muted" />
+          <div className="mt-3 h-4 w-1/3 rounded bg-muted" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+async function FeaturedStudios() {
+  let studios;
+  try {
+    const result = await getStudios(
+      { limit: 6, sort: "newest" },
+      { cache: "no-store" },
+    );
+    studios = result.studios;
+  } catch {
+    return (
+      <div
+        className="mt-9 rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center"
+        role="alert"
+      >
+        <p className="text-sm text-destructive">
+          Featured studios are temporarily unavailable.
+        </p>
+        <Link
+          className="mt-3 inline-flex font-semibold text-primary underline-offset-4 hover:underline"
+          href="/studios"
+          prefetch={false}
+        >
+          Explore Studios
+        </Link>
+      </div>
+    );
+  }
+
+  if (studios.length === 0) {
+    return (
+      <div className="mt-9 rounded-2xl border border-border bg-card p-6 text-center">
+        <p className="text-sm text-muted-foreground">
+          No studios are available yet.
+        </p>
+        <Link
+          className="mt-3 inline-flex font-semibold text-primary underline-offset-4 hover:underline"
+          href="/studios"
+          prefetch={false}
+        >
+          Explore Studios
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-9 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-12">
+      {studios.map((studio) => (
+        <StudioCard key={studio.id || studio.slug} studio={studio} />
+      ))}
+    </div>
+  );
+}
+
 export default function Home() {
   return (
     <>
@@ -54,11 +129,15 @@ export default function Home() {
           <Container>
             <HeroCarousel />
             <form
+              action="/studios"
               aria-describedby="studio-search-note"
               className="relative z-10 mx-auto -mt-5 grid max-w-5xl gap-3 rounded-2xl border border-border bg-card p-4 shadow-card sm:-mt-7 sm:grid-cols-[1.1fr_1fr_auto] sm:items-end sm:gap-4 sm:p-5"
+              method="get"
             >
               <div className="min-w-0 space-y-2">
-                <Label htmlFor="studio-location">Where are you creating?</Label>
+                <Label htmlFor="studio-search">
+                  Search by city, studio, or keyword
+                </Label>
                 <div className="relative">
                   <MapPin
                     aria-hidden="true"
@@ -66,11 +145,10 @@ export default function Home() {
                   />
                   <Input
                     className="pl-9"
-                    id="studio-location"
-                    name="location"
-                    placeholder="City or neighborhood"
+                    id="studio-search"
+                    name="search"
+                    placeholder="City, studio, or keyword"
                     type="search"
-                    disabled
                   />
                 </div>
               </div>
@@ -79,7 +157,6 @@ export default function Home() {
                 <select
                   className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition-[border-color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                   defaultValue=""
-                  disabled
                   id="studio-category"
                   name="category"
                 >
@@ -91,7 +168,7 @@ export default function Home() {
                   ))}
                 </select>
               </div>
-              <Button className="h-11 sm:px-6" disabled type="button">
+              <Button className="h-11 sm:px-6" type="submit">
                 <Search aria-hidden="true" />
                 Find a space
               </Button>
@@ -100,15 +177,15 @@ export default function Home() {
               className="mx-auto mt-3 max-w-5xl text-center text-xs text-muted-foreground"
               id="studio-search-note"
             >
-              Search sample listings on{" "}
+              Search live listings by name, location, or keyword. For more
+              filters, visit{" "}
               <Link
                 className="font-semibold text-primary underline-offset-4 hover:underline"
                 href="/studios"
               >
                 Explore Studios
               </Link>
-              . The homepage quick-search will connect when live listings are
-              available.
+              .
             </p>
           </Container>
         </section>
@@ -212,11 +289,9 @@ export default function Home() {
               titleId="studios-title"
               title="Good work starts somewhere."
             />
-            <div className="mt-9 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-12">
-              {featuredStudios.map((studio) => (
-                <StudioCard key={studio.slug} studio={studio} />
-              ))}
-            </div>
+            <Suspense fallback={<FeaturedStudiosFallback />}>
+              <FeaturedStudios />
+            </Suspense>
           </Container>
         </section>
 
