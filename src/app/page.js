@@ -424,8 +424,9 @@ export default function Home() {
               Liability protection, verified profiles, equipment safety
               services, and 24/7 host support are intended assurances, not
               services that are currently operational. Their terms will be
-              published before any booking service opens. The booking steps
-              above describe a planned flow; booking is not available yet.
+              published before any booking service opens. Booking requests can
+              be submitted and are saved as Pending, but host confirmation and
+              payment processing are not currently available.
             </p>
             <Button asChild className="mt-6" variant="outline">
               <Link href="/studios" prefetch={false}>

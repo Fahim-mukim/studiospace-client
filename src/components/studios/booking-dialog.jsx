@@ -93,7 +93,8 @@ export function BookingDialog({ studio }) {
             Reserve {studio?.name || studio?.title}
           </DialogTitle>
           <DialogDescription>
-            Submit a booking request. Status will be Pending until confirmed.
+            Submit a booking request, which is saved as Pending. Host
+            confirmation and payment processing are not currently available.
           </DialogDescription>
         </DialogHeader>
 

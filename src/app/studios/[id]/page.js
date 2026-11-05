@@ -197,8 +197,9 @@ export default async function StudioDetailsPage({ params }) {
           </div>
 
           <p className="mb-5 rounded-2xl border border-border bg-secondary/60 px-4 py-3 text-sm leading-6 text-secondary-foreground">
-            Live studio listing powered by the StudioSpace API. Availability,
-            reservations, and payments remain demonstration concepts.
+            Live studio listing powered by the StudioSpace API. Booking
+            requests can be submitted, but availability, host confirmation, and
+            payment processing are not currently available.
           </p>
 
           <StudioGallery images={studio.gallery} name={displayName} />
@@ -417,8 +418,8 @@ export default async function StudioDetailsPage({ params }) {
                     aria-hidden="true"
                     className="mt-0.5 size-4 shrink-0"
                   />
-                  Booking requests stay Pending until the studio host confirms
-                  them.
+                  Requests are saved as Pending. Host confirmation and payment
+                  processing are not currently available.
                 </p>
               </div>
             </aside>
