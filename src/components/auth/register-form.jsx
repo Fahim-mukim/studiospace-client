@@ -172,7 +172,7 @@ export function RegisterForm({ oauthError = false }) {
           email.
         </p>
       ) : null}
-      <GoogleAuthButton errorCallbackPath="/register?error=google" />
+      <GoogleAuthButton mode="register" />
       <div className="my-6 flex items-center gap-4 text-xs text-muted-foreground">
         <span className="h-px flex-1 bg-border" />
         <span>or register with email</span>

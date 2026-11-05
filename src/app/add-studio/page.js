@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createStudio } from "@/lib/api";
 import {
+  ADD_STUDIO_SUCCESS_PATH,
   buildStudioPayload,
   getHostInformation,
   getStudioImageUrlError,
@@ -199,17 +200,9 @@ export default function AddStudioPage() {
     setSubmitting(true);
     try {
       const payload = buildStudioPayload(values, cleanedAmenities);
-      const result = await createStudio(payload);
-      const created = result?.studio || result?.data;
-      const idOrSlug =
-        created?.slug || created?.id || created?._id;
-
+      await createStudio(payload);
       toast.success("Studio created successfully!");
-      if (idOrSlug) {
-        router.push(`/studios/${encodeURIComponent(idOrSlug)}`);
-      } else {
-        router.push("/studios");
-      }
+      router.push(ADD_STUDIO_SUCCESS_PATH);
     } catch (error) {
       const message =
         error?.message || "Failed to create studio. Please try again.";
@@ -277,7 +270,7 @@ export default function AddStudioPage() {
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="host-name">User name</Label>
+                      <Label htmlFor="host-name">Host name</Label>
                       <Input
                         id="host-name"
                         autoComplete="name"
@@ -287,7 +280,7 @@ export default function AddStudioPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="host-email">User email</Label>
+                      <Label htmlFor="host-email">Host email</Label>
                       <Input
                         id="host-email"
                         type="email"

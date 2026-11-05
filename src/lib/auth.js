@@ -6,6 +6,7 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { nextCookies } from "better-auth/next-js";
 import { jwt } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
+import { isGoogleProviderConfigured } from "./google-provider-readiness.mjs";
 
 const signupFields = new Set([
   "name",
@@ -41,8 +42,8 @@ function getRuntimeConfig() {
     throw new Error("BETTER_AUTH_URL must use HTTPS in production.");
   }
 
-  const googleClientId = process.env.GOOGLE_CLIENT_ID;
-  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim() || "";
+  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim() || "";
   if (Boolean(googleClientId) !== Boolean(googleClientSecret)) {
     throw new Error(
       "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be configured together.",
@@ -140,8 +141,10 @@ function validateSignup(context) {
 }
 
 export function createAuth({ database, mongoClient, config }) {
-  const googleConfigured =
-    Boolean(config.googleClientId) && Boolean(config.googleClientSecret);
+  const googleConfigured = isGoogleProviderConfigured(
+    config.googleClientId,
+    config.googleClientSecret,
+  );
   if (Boolean(config.googleClientId) !== Boolean(config.googleClientSecret)) {
     throw new Error(
       "Google OAuth client ID and secret must be configured together.",

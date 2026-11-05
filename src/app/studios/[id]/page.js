@@ -350,14 +350,14 @@ export default async function StudioDetailsPage({ params }) {
 
                 {Array.isArray(studio.reviews) && studio.reviews.length > 0 ? (
                   <div className="mt-5 grid gap-4 md:grid-cols-2">
-                    {studio.reviews.map((review) => (
+                    {studio.reviews.map((review, index) => (
                       <article
                         className="rounded-2xl border border-border bg-card p-5"
-                        key={review.name || review.id}
+                        key={review.id || `${review.name || "review"}-${index}`}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <h3 className="font-medium text-foreground">
-                            {review.name}
+                            {review.name || "Guest"}
                           </h3>
                           <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
                             <Star
@@ -381,8 +381,7 @@ export default async function StudioDetailsPage({ params }) {
                 ) : (
                   <div className="mt-5 rounded-2xl border border-dashed border-border bg-card p-6 text-center">
                     <p className="text-sm text-muted-foreground">
-                      No reviews yet for this workspace. Be the first to share your
-                      creative experience.
+                      No reviews yet for this workspace.
                     </p>
                   </div>
                 )}

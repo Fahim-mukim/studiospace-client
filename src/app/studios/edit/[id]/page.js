@@ -12,6 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getStudioById, updateStudio } from "@/lib/api";
+import {
+  buildStudioUpdatePayload,
+  EDIT_STUDIO_SUCCESS_PATH,
+  getHostInformation,
+} from "@/lib/add-studio-form.mjs";
 import { authClient } from "@/lib/auth-client";
 
 const CATEGORY_OPTIONS = [
@@ -136,6 +141,7 @@ export default function EditStudioPage() {
   const id = params?.id;
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const user = session?.user ?? null;
+  const hostInformation = getHostInformation(user);
 
   const [values, setValues] = useState({
     title: "",
@@ -257,33 +263,11 @@ export default function EditStudioPage() {
 
     setSubmitting(true);
     try {
-      const payload = {
-        title: values.title.trim(),
-        categorySlug: values.categorySlug,
-        hourlyRate: Number(values.hourlyRate),
-        securityDeposit: Number(values.securityDeposit),
-        capacity: Number(values.capacity),
-        location: values.location.trim(),
-        image: values.image.trim(),
-        amenities: cleanedAmenities,
-        overview: values.overview.trim(),
-      };
-
-      if (typeof values.imageAlt === "string") {
-        if (values.imageAlt.trim()) {
-          payload.imageAlt = values.imageAlt.trim();
-        } else {
-          payload.imageAlt = "";
-        }
-      }
-
-      const result = await updateStudio(id, payload);
-      const updated = result?.studio || result?.data;
-      const idOrSlug =
-        updated?.slug || updated?.id || studio?.slug || studio?.id || id;
+      const payload = buildStudioUpdatePayload(values, cleanedAmenities);
+      await updateStudio(id, payload);
 
       toast.success("Studio updated successfully!");
-      router.push(`/studios/${encodeURIComponent(idOrSlug)}`);
+      router.push(EDIT_STUDIO_SUCCESS_PATH);
     } catch (error) {
       const message =
         error?.message || "Failed to update studio. Please try again.";
@@ -362,6 +346,39 @@ export default function EditStudioPage() {
                 noValidate
                 onSubmit={handleSubmit}
               >
+                <section className="space-y-4">
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Host information
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    These details come from your signed-in account and cannot
+                    be edited here.
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="host-name">Host name</Label>
+                      <Input
+                        id="host-name"
+                        autoComplete="name"
+                        readOnly={hostInformation.readOnly}
+                        value={hostInformation.name}
+                        className="read-only:cursor-text read-only:bg-muted/40 read-only:text-muted-foreground"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="host-email">Host email</Label>
+                      <Input
+                        id="host-email"
+                        type="email"
+                        autoComplete="email"
+                        readOnly={hostInformation.readOnly}
+                        value={hostInformation.email}
+                        className="read-only:cursor-text read-only:bg-muted/40 read-only:text-muted-foreground"
+                      />
+                    </div>
+                  </div>
+                </section>
+
                 <section className="space-y-4">
                   <h2 className="text-lg font-semibold text-foreground">
                     Basic information

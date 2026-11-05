@@ -1,3 +1,6 @@
+export const ADD_STUDIO_SUCCESS_PATH = "/my-listings";
+export const EDIT_STUDIO_SUCCESS_PATH = "/my-listings";
+
 export function getHostInformation(user) {
   return {
     name: typeof user?.name === "string" ? user.name : "",
@@ -42,6 +45,26 @@ export function buildStudioPayload(values, cleanedAmenities) {
   };
 
   if (values.imageAlt && values.imageAlt.trim()) {
+    payload.imageAlt = values.imageAlt.trim();
+  }
+
+  return payload;
+}
+
+export function buildStudioUpdatePayload(values, cleanedAmenities) {
+  const payload = {
+    title: values.title.trim(),
+    categorySlug: values.categorySlug,
+    hourlyRate: Number(values.hourlyRate),
+    securityDeposit: Number(values.securityDeposit),
+    capacity: Number(values.capacity),
+    location: values.location.trim(),
+    image: values.image.trim(),
+    amenities: cleanedAmenities,
+    overview: values.overview.trim(),
+  };
+
+  if (typeof values.imageAlt === "string") {
     payload.imageAlt = values.imageAlt.trim();
   }
 

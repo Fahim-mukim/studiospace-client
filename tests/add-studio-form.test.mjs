@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  ADD_STUDIO_SUCCESS_PATH,
   buildStudioPayload,
+  buildStudioUpdatePayload,
+  EDIT_STUDIO_SUCCESS_PATH,
   getHostInformation,
   getStudioImageUrlError,
 } from "../src/lib/add-studio-form.mjs";
@@ -72,5 +75,43 @@ test("studio creation payload excludes host identity and server-managed fields",
     amenities: ["Natural light"],
     overview: "A welcoming photography studio with natural light.",
     imageAlt: "Bright studio",
+  });
+});
+
+test("add and edit success redirects go to My Listings", () => {
+  assert.equal(ADD_STUDIO_SUCCESS_PATH, "/my-listings");
+  assert.equal(EDIT_STUDIO_SUCCESS_PATH, "/my-listings");
+});
+
+test("studio update payload excludes host identity and server-managed fields", () => {
+  const payload = buildStudioUpdatePayload(
+    {
+      title: " Updated Studio ",
+      categorySlug: "photo-studios",
+      hourlyRate: "90",
+      securityDeposit: "125",
+      capacity: "6",
+      location: " Queens ",
+      image: " https://images.example.com/updated.jpg ",
+      imageAlt: "",
+      overview: "An updated studio overview with adequate descriptive detail.",
+      ownerId: "untrusted-owner",
+      ownerEmail: "untrusted@example.com",
+      hostName: "Untrusted host",
+    },
+    ["Cyclorama"],
+  );
+
+  assert.deepEqual(payload, {
+    title: "Updated Studio",
+    categorySlug: "photo-studios",
+    hourlyRate: 90,
+    securityDeposit: 125,
+    capacity: 6,
+    location: "Queens",
+    image: "https://images.example.com/updated.jpg",
+    amenities: ["Cyclorama"],
+    overview: "An updated studio overview with adequate descriptive detail.",
+    imageAlt: "",
   });
 });

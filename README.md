@@ -12,6 +12,32 @@ Git histories, and deployments.
 - MongoDB available to the Next.js server runtime for Better Auth
 - The separate StudioSpace Server running for marketplace API access
 
+## Project and assignment information
+
+- **Live website:** Pending user input. No verified production Client URL is
+  present in the repository or deployment metadata available in this checkout.
+- **Examiner test credentials:** Pending user input. Do not publish real
+  account passwords or secrets in this README.
+
+### Features
+
+- Email/password registration and login with Better Auth.
+- Google OAuth login and registration when both server-only Google credentials
+  are configured; deployed OAuth has not yet been verified.
+- Session-protected dashboard, studio listings, and booking views.
+- Marketplace studio search, details, owner listing, creation, editing, and
+  deletion through the independent Express API.
+- Booking requests with owner-scoped listing and pending-request cancellation.
+- Studio details show validated stored reviews when present, otherwise a clear
+  empty state; review submission is not included.
+
+### Technology stack
+
+- Next.js 16 App Router and React 19 (JavaScript/JSX)
+- Better Auth for Client-owned identity and MongoDB-backed sessions
+- Express.js API with MongoDB and `jose` JWT/JWKS verification
+- Tailwind CSS for styling
+
 ## Local setup
 
 1. Install the client dependencies:
@@ -76,9 +102,16 @@ Git histories, and deployments.
 - Login at `/login` with email/password, or continue with Google.
 - Google OAuth requires the server-only Client variables
   `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. The local callback is
-  `http://localhost:3000/api/auth/callback/google`. Update the authorized
-  redirect URI manually in Google Cloud Console; the deployed callback must use
-  the deployed Next.js origin.
+  `http://localhost:3000/api/auth/callback/google`. The Google button checks
+  the server-side provider readiness endpoint and is not shown as active if
+  both credentials are not configured. Update the authorized redirect URI
+  manually in Google Cloud Console. It must exactly equal
+  `https://<CLIENT_DOMAIN>/api/auth/callback/google` in production; the actual
+  production Client domain is pending user input and must not be guessed.
+  Configure `BETTER_AUTH_URL` and these server-only credentials separately in
+  every Vercel deployment scope that will use OAuth. For a preview deployment,
+  its canonical origin, callback URI, Google Console authorization, and the
+  Server's `CLIENT_AUTH_URL` must all agree.
 - Better Auth stores users in MongoDB's `user` collection, credential accounts
   (including password hashes) in `account`, sessions in `session`, and signing
   keys in `jwks`. The browser never connects to MongoDB and never stores
@@ -149,8 +182,10 @@ configure its `CLIENT_URL`, `CLIENT_AUTH_URL`, and MongoDB variables there.
   listings, and edits use the protected Express API. The Server derives
   ownership from the verified Better Auth identity.
 - Booking requests are persisted by the Express API with `Pending` status.
-  Users can view and cancel their own pending bookings. There is no host
-  approval/confirmation UI or API, payment flow, or review API.
+  Users can view and cancel their own pending bookings; payment processing is
+  not implemented. Studio details render only validated reviews already present
+  in a stored studio record; otherwise they show an empty state. Review
+  submission is not included.
 - Static hero imagery, category descriptions, marketing content, and booking
   step copy remain presentation content. `src/data/studios.js` remains as an
   unused legacy fixture module; it is not the fallback source for the live

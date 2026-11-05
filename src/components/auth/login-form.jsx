@@ -92,8 +92,8 @@ export function LoginForm({
         </p>
       ) : null}
       <GoogleAuthButton
-        callbackPath={returnTo}
-        errorCallbackPath={`/login?error=google&returnTo=${encodeURIComponent(returnTo)}`}
+        mode="login"
+        returnTo={returnTo}
       />
       <div className="my-6 flex items-center gap-4 text-xs text-muted-foreground">
         <span className="h-px flex-1 bg-border" />
