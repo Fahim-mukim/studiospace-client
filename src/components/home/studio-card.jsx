@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -9,8 +8,10 @@ import {
 } from "lucide-react";
 import { HoverLift } from "@/components/home/hover-lift";
 import { Badge } from "@/components/ui/badge";
+import { StudioImage } from "@/components/studios/studio-image";
 
 export function StudioCard({ studio }) {
+  const imageSource = studio.image || "/images/studios/daylight-loft.jpg";
   const displayName = studio.name || studio.title || "Untitled Studio";
   const displayLocation = studio.location || "Location not specified";
   const displayCategory = studio.category || "Creative Space";
@@ -27,10 +28,6 @@ export function StudioCard({ studio }) {
   const displayRate =
     studio.rate ||
     (studio.hourlyRate !== undefined ? `$${studio.hourlyRate}` : "$0");
-  const isRemoteImage =
-    typeof studio.image === "string" &&
-    (studio.image.startsWith("http://") || studio.image.startsWith("https://"));
-
   return (
     <HoverLift className="h-full min-w-0">
       <article className="group h-full">
@@ -41,13 +38,12 @@ export function StudioCard({ studio }) {
           prefetch={false}
         >
           <div className="relative aspect-[1.22] overflow-hidden rounded-[1.4rem] bg-muted">
-            <Image
+            <StudioImage
               alt={studio.imageAlt || displayName}
               className="object-cover transition-transform duration-500 group-hover:scale-[1.035]"
-              fill
+              label={displayName}
               sizes="(max-width: 640px) 92vw, (max-width: 1024px) 45vw, 30vw"
-              src={studio.image || "/images/studios/daylight-loft.jpg"}
-              unoptimized={isRemoteImage}
+              src={imageSource}
             />
             <Badge
               className="absolute left-4 top-4 border-white/30 bg-black/50 text-white backdrop-blur-md"

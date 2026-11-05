@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StudioImage } from "@/components/studios/studio-image";
 
 export function StudioGallery({ name, images = [] }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -14,6 +14,8 @@ export function StudioGallery({ name, images = [] }) {
       : [{ src: "/images/studios/daylight-loft.jpg", alt: name || "Studio gallery" }];
 
   const activeImage = safeImages[activeIndex] || safeImages[0];
+  const activeImageSource =
+    activeImage?.src || "/images/studios/daylight-loft.jpg";
 
   function move(direction) {
     if (safeImages.length <= 1) return;
@@ -22,21 +24,15 @@ export function StudioGallery({ name, images = [] }) {
     );
   }
 
-  const isRemote = (src) =>
-    typeof src === "string" &&
-    (src.startsWith("http://") || src.startsWith("https://"));
-
   return (
     <section aria-label={`${name} image gallery`} className="space-y-3">
       <div className="relative aspect-[1.18] overflow-hidden rounded-3xl bg-muted sm:aspect-[1.55]">
-        <Image
+        <StudioImage
           alt={activeImage?.alt || name || "Studio image"}
-          className="object-cover"
-          fill
+          label={name || "Studio"}
           priority
           sizes="(max-width: 1024px) 100vw, 65vw"
-          src={activeImage?.src || "/images/studios/daylight-loft.jpg"}
-          unoptimized={isRemote(activeImage?.src)}
+          src={activeImageSource}
         />
         {safeImages.length > 1 && (
           <div className="absolute inset-x-3 bottom-3 flex items-end justify-between sm:inset-x-5 sm:bottom-5">
@@ -87,13 +83,11 @@ export function StudioGallery({ name, images = [] }) {
               onClick={() => setActiveIndex(index)}
               type="button"
             >
-              <Image
+              <StudioImage
                 alt=""
-                className="object-cover"
-                fill
+                label={`${name || "Studio"} thumbnail`}
                 sizes="(max-width: 640px) 32vw, 22vw"
                 src={image.src}
-                unoptimized={isRemote(image.src)}
               />
             </button>
           ))}
