@@ -93,8 +93,8 @@ helpers live in `src/lib`.
 - **Button:** accessible copper primary, calm secondary, and outlined/ghost
   variants. Maintain visible focus and generous hit areas.
 - **Card:** warm semantic surface, quiet border, restrained shadow, and
-  editorial composition. Studio cards should later be custom image-led
-  components, not generic admin tiles.
+  editorial composition. The current StudioCard is an image-led marketplace
+  card, not a generic admin tile.
 - **Badge:** short category/status labels; use semantic status variants and
   readable text.
 - **Input/Label:** persistent visible labels, clear errors, and obvious focus.

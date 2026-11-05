@@ -59,15 +59,19 @@ Git histories, and deployments.
   letter.
   A photo URL is optional.
 - Registration signs the user in automatically (`autoSignIn: true`). Once
-  Better Auth creates the account, the Client refreshes the session and
-  redirects to the safe `returnTo` destination, or `/` when none was supplied,
-  so the authenticated navbar and protected routes are available immediately
-  and the session survives a page refresh. This is a deliberate, user-requested
+  Better Auth creates the account, the Client attempts to refresh the session
+  and redirects to the safe `returnTo` destination, or `/` when none was
+  supplied. This is a deliberate, user-requested
   deviation from the written assignment, which asks for a redirect to the Login
   page after a successful signup; both behaviors are not claimed to be the
-  same. If Better Auth reports a failure — including an email address that is
-  already registered — the Client shows an error toast and does not redirect or
-  claim that an account was created.
+  same. Better Auth may return a generic, error-free response for a duplicate
+  email to avoid revealing account existence. The current registration form
+  treats every error-free response as account creation and redirects, so this
+  duplicate-email UI behavior is not verified as accurate. The opt-in
+  integration test also still expects signup not to create a session, which
+  conflicts with the current `autoSignIn: true` configuration. Do not treat
+  that test as passing evidence until the configuration and test expectation
+  are reconciled and the dedicated-database test is run.
 - Login at `/login` with email/password, or continue with Google.
 - Google OAuth requires the server-only Client variables
   `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. The local callback is
@@ -92,8 +96,14 @@ domain configuration or a same-origin proxy; see the Server README for details.
 ### MongoDB integration test
 
 `npm test` runs the Node test suite and clearly skips the database integration
-test if either test variable is missing. To run it, provide an explicit
-dedicated test MongoDB URI and a database name that clearly includes `test`:
+test if either test variable is missing. Its test source covers real Better
+Auth/MongoDB signup, credential persistence, login/session cookies, session
+lookup, and logout, but the test has not been run against the dedicated
+database in this checkout. Moreover, its expectation that signup creates no
+session is inconsistent with `autoSignIn: true` above; therefore those cases
+are not currently verified. To run it safely after reconciling that mismatch,
+provide an explicit dedicated test MongoDB URI and a database name that clearly
+includes `test`:
 
 ```powershell
 $env:MONGODB_TEST_URI = "<dedicated MongoDB test URI>"
@@ -105,10 +115,39 @@ Remove-Item Env:\MONGODB_TEST_DB_NAME
 
 The test never falls back to `MONGODB_URI`, never drops a database, uses a
 unique email, and removes only its own user, account, session, and newly
-generated signing-key records. It verifies signup persistence, password
-hashing, duplicate-email behavior, login, HTTP-only cookies, session/JWKS
-validation, and logout. Do not point these variables at a normal or production
-database.
+generated signing-key records. Do not point these variables at a normal or
+production database.
+
+## Marketplace and Express API
+
+The browser uses `NEXT_PUBLIC_API_BASE_URL` for Express marketplace requests
+(default: `http://localhost:5000`); it does not connect to MongoDB. Configure
+that public base URL independently from the Client's server-only authentication
+variables. Run the Express Server from its own checkout and configure its
+`CLIENT_URL`, `CLIENT_AUTH_URL`, and MongoDB variables there.
+
+- The homepage requests up to six newest studios from
+  `GET /api/studios?limit=6&sort=newest`. It shows loading, API-error, and
+  empty states; it does not fall back to the old studio fixtures.
+- Homepage quick-search submits a native GET request to `/studios` with
+  `search` and `category`. Explore uses the Express API for search, category,
+  maximum hourly price, sorting, and pagination.
+- Studio details come from `GET /api/studios/:id`; studio creation, owner
+  listings, and edits use the protected Express API. The Server derives
+  ownership from the verified Better Auth identity.
+- Booking requests are persisted by the Express API with `Pending` status.
+  Users can view and cancel their own pending bookings. There is no host
+  approval/confirmation UI or API, payment flow, or review API.
+- Static hero imagery, category descriptions, marketing content, and booking
+  step copy remain presentation content. `src/data/studios.js` remains as an
+  unused legacy fixture module; it is not the fallback source for the live
+  homepage, Explore, or details routes.
+
+For local development, start the independently configured Server with
+`npm run dev` in its repository, then start this Client with `npm run dev`.
+Run `npm test`, `npm run lint`, and `npm run build` in the Client checkout.
+See [docs/requirement-traceability.md](./docs/requirement-traceability.md)
+for source evidence, verification levels, and known limitations.
 
 ## Scripts
 
@@ -117,5 +156,10 @@ npm run dev
 npm run lint
 npm run build
 npm test
+npm run test:auth-integration
 npm start
 ```
+
+`npm run test:auth-integration` requires the explicit dedicated test database
+variables described above; reconcile its current `autoSignIn` expectation
+before relying on the result.

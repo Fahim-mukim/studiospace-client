@@ -27,19 +27,21 @@ not imply that a pictured person, venue, or brand endorses StudioSpace.
 | `public/images/studios/the-cut-room.jpg` | [Unsplash photo-1574717024653-61fd2cf4d44d](https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d) |
 | `public/images/studios/the-foundry.jpg` | [Unsplash photo by Ashe Walker](https://unsplash.com/photos/a-room-with-a-easel-easel-paintbrushes-and-other-Lp7iAR8vp5M), [source image](https://images.unsplash.com/photo-1740710543611-80b658171bc3) |
 
-## Temporary demonstration data
+## Data and image use
 
-The canonical studio fixture data in `src/data/studios.js` is illustrative
-only. Featured and Explore Studios names, locations, capacities, hourly rates,
-category labels, ratings, review counts, host profiles, reviews, and detail
-descriptions are not live listings, verified reviews, or booking availability.
-The hero slides, category labels, booking steps, and host-support copy are also
-static presentation content.
+The hero slides, category descriptions, booking-step copy, and host-support
+copy are static presentation content. The legacy studio fixtures in
+`src/data/studios.js` remain illustrative and are not the current source for
+homepage featured results, Explore results, or studio details. Those routes
+request records from the independently deployed Express API. A missing studio
+image can still use the local `daylight-loft.jpg` fallback in the card/gallery,
+so a local image should not be read as proof of the listed venue's identity.
 
-Explore Studio results and studio details are fixture-backed and are not
-connected to MongoDB or an Express API. The booking dialog is a non-persistent
-UI preview only; it does not check availability, submit a booking, or process
-payment. User-created listings and verified reviews are not implemented. The
-target remains an independently deployed Next.js client calling the separate
-Express REST API, backed by MongoDB; database and booking integration are
-pending.
+The Server also includes demo seed records. Neither fixture nor seed content
+establishes that a venue, host, review, rating, or availability is independently
+verified. The current Server does not provide a reviews API.
+
+Studio listings can be created and edited through the authenticated Express
+API. Booking requests are also submitted to the API and persisted as `Pending`;
+this is not a host confirmation, availability guarantee, or payment. The
+current application has no host approval/confirmation API or payment flow.
