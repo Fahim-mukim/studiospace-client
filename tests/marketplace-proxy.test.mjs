@@ -65,7 +65,10 @@ test("forwards only allowlisted routes and their permitted methods", async () =>
       ...(["POST", "PATCH"].includes(method) ? { body: "{}" } : {}),
     });
     const response = await handleMarketplaceProxy(request, {
-      env,
+      env: {
+        ...env,
+        SERVER_API_BASE_URL: ` ${upstreamOrigin}/ `,
+      },
       fetchImpl: async (url) => {
         calledUrl = new URL(url);
         return jsonResponse({ success: true });
@@ -322,6 +325,37 @@ test("returns safe errors for missing configuration, upstream failures, and redi
     { env: {}, fetchImpl: async () => jsonResponse({}) },
   );
   assert.equal(missingConfig.status, 503);
+  assert.deepEqual(await missingConfig.json(), {
+    success: false,
+    message:
+      "Marketplace API is not configured. Set the server-only SERVER_API_BASE_URL to the Express API origin.",
+    code: "UPSTREAM_NOT_CONFIGURED",
+    details: {
+      setting: "SERVER_API_BASE_URL",
+      reason: "missing",
+    },
+  });
+
+  const missingBookingConfig = await handleMarketplaceProxy(
+    makeRequest("bookings", { method: "POST", body: "{}" }),
+    {
+      env: { BETTER_AUTH_URL: clientOrigin },
+      fetchImpl: async () => {
+        assert.fail("A missing upstream must not receive booking requests.");
+      },
+    },
+  );
+  assert.equal(missingBookingConfig.status, 503);
+  assert.deepEqual(await missingBookingConfig.json(), {
+    success: false,
+    message:
+      "Marketplace API is not configured. Set the server-only SERVER_API_BASE_URL to the Express API origin.",
+    code: "UPSTREAM_NOT_CONFIGURED",
+    details: {
+      setting: "SERVER_API_BASE_URL",
+      reason: "missing",
+    },
+  });
 
   let publicUrlFallbackCalls = 0;
   const publicUrlFallback = await handleMarketplaceProxy(
@@ -339,6 +373,36 @@ test("returns safe errors for missing configuration, upstream failures, and redi
   );
   assert.equal(publicUrlFallback.status, 503);
   assert.equal(publicUrlFallbackCalls, 0);
+
+  for (const invalidUrl of [
+    "not-a-url",
+    `${upstreamOrigin}/api`,
+    `${upstreamOrigin}?mode=private`,
+  ]) {
+    const invalidConfig = await handleMarketplaceProxy(
+      makeRequest("studios/mine"),
+      {
+        env: {
+          SERVER_API_BASE_URL: invalidUrl,
+          NEXT_PUBLIC_API_BASE_URL: upstreamOrigin,
+        },
+        fetchImpl: async () => {
+          assert.fail("Invalid configuration must not call the upstream.");
+        },
+      },
+    );
+    assert.equal(invalidConfig.status, 503);
+    assert.deepEqual(await invalidConfig.json(), {
+      success: false,
+      message:
+        "Marketplace API configuration is invalid. SERVER_API_BASE_URL must be an absolute HTTP(S) origin without a path, query, or fragment.",
+      code: "UPSTREAM_NOT_CONFIGURED",
+      details: {
+        setting: "SERVER_API_BASE_URL",
+        reason: "invalid",
+      },
+    });
+  }
 
   const networkFailure = await handleMarketplaceProxy(
     makeRequest("studios/mine"),

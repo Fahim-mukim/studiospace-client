@@ -70,6 +70,24 @@ Git histories, and deployments.
    for protected marketplace requests forwarded by the Next.js BFF. Never add a
    `NEXT_PUBLIC_` prefix to MongoDB, Better Auth, or upstream API configuration.
 
+### Vercel marketplace API configuration
+
+In the **studiospace-client** Vercel project, set the server-only
+`SERVER_API_BASE_URL` to the Express Server origin (origin only; do not append
+`/api` or another path). The currently verified Server origin is:
+
+```env
+SERVER_API_BASE_URL=https://studiospace-server-ashen.vercel.app
+```
+
+Set it for **Production** to restore the deployed private marketplace
+workflows. Also set it for **Preview** and **Development** if those deployment
+scopes should support dashboard, listings, and booking operations. Redeploy
+each affected scope after changing the value; this repository cannot update
+Vercel project settings. Keep `NEXT_PUBLIC_API_BASE_URL` separately configured
+for direct public studio reads; it is not a fallback for the authenticated
+BFF.
+
 4. Configure and run the Express Server from its own checkout and environment.
    Then start the Client:
 

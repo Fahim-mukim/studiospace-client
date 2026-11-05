@@ -151,10 +151,12 @@ function getTrustedClientOrigin(env) {
 
 function getUpstreamBaseUrl(env) {
   const configuredUrl = env.SERVER_API_BASE_URL;
-  if (typeof configuredUrl !== "string" || !configuredUrl) return null;
+  if (typeof configuredUrl !== "string" || !configuredUrl.trim()) {
+    return { url: null, reason: "missing" };
+  }
 
   try {
-    const parsedUrl = new URL(configuredUrl);
+    const parsedUrl = new URL(configuredUrl.trim());
     if (
       !["http:", "https:"].includes(parsedUrl.protocol) ||
       !parsedUrl.hostname ||
@@ -164,11 +166,11 @@ function getUpstreamBaseUrl(env) {
       parsedUrl.search ||
       parsedUrl.hash
     ) {
-      return null;
+      return { url: null, reason: "invalid" };
     }
-    return parsedUrl.origin;
+    return { url: parsedUrl.origin, reason: null };
   } catch {
-    return null;
+    return { url: null, reason: "invalid" };
   }
 }
 
@@ -267,13 +269,20 @@ export async function handleMarketplaceProxy(
     }
   }
 
-  const upstreamBaseUrl = getUpstreamBaseUrl(env);
-  if (!upstreamBaseUrl) {
+  const upstreamConfiguration = getUpstreamBaseUrl(env);
+  if (!upstreamConfiguration.url) {
+    const configurationMessage =
+      upstreamConfiguration.reason === "missing"
+        ? "Marketplace API is not configured. Set the server-only SERVER_API_BASE_URL to the Express API origin."
+        : "Marketplace API configuration is invalid. SERVER_API_BASE_URL must be an absolute HTTP(S) origin without a path, query, or fragment.";
     return jsonResponse(503, {
       success: false,
-      message: "Marketplace API is not configured.",
+      message: configurationMessage,
       code: "UPSTREAM_NOT_CONFIGURED",
-      details: null,
+      details: {
+        setting: "SERVER_API_BASE_URL",
+        reason: upstreamConfiguration.reason,
+      },
     });
   }
 
@@ -299,7 +308,10 @@ export async function handleMarketplaceProxy(
   const sessionCookie = filterSessionDataCookie(request.headers.get("cookie"));
   if (sessionCookie) headers.set("Cookie", sessionCookie);
 
-  const upstreamUrl = new URL(endpoint.upstreamPath, upstreamBaseUrl);
+  const upstreamUrl = new URL(
+    endpoint.upstreamPath,
+    upstreamConfiguration.url,
+  );
   if (method === "GET") upstreamUrl.search = requestUrl.search;
 
   let upstreamResponse;
