@@ -34,6 +34,24 @@ export function buildApiUrl(path, query = {}) {
   return url.toString();
 }
 
+export function buildMarketplaceProxyUrl(path, query = {}) {
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  const url = new URL(
+    `/api/marketplace/${normalizedPath}`,
+    typeof window === "undefined" ? "http://localhost" : window.location.origin,
+  );
+
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, String(value));
+    }
+  }
+
+  return typeof window === "undefined"
+    ? `${url.pathname}${url.search}`
+    : url.toString();
+}
+
 /**
  * Normalizes a studio object from the server to ensure consistency
  * across UI components (handling title vs name, hourlyRate vs rate, gallery, host, etc.).
@@ -152,9 +170,7 @@ export function normalizeStudio(studio) {
  * Safe fetch wrapper that handles network errors, parses JSON,
  * and formats standardized ApiError on failure.
  */
-export async function fetchApi(path, { query, headers, ...fetchOptions } = {}) {
-  const url = buildApiUrl(path, query);
-
+async function fetchApiUrl(url, { headers, ...fetchOptions } = {}) {
   let response;
   try {
     response = await fetch(url, {
@@ -191,6 +207,14 @@ export async function fetchApi(path, { query, headers, ...fetchOptions } = {}) {
   }
 
   return body;
+}
+
+export async function fetchApi(path, { query, ...options } = {}) {
+  return fetchApiUrl(buildApiUrl(path, query), options);
+}
+
+async function fetchMarketplaceApi(path, { query, ...options } = {}) {
+  return fetchApiUrl(buildMarketplaceProxyUrl(path, query), options);
 }
 
 /**
@@ -300,7 +324,7 @@ export async function getStudioById(idOrSlug, options = {}) {
  * Creates a new studio. Requires an authenticated session (credentials included).
  */
 export async function createStudio(studioData, options = {}) {
-  const result = await fetchApi("/api/studios", {
+  const result = await fetchMarketplaceApi("/studios", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -323,7 +347,7 @@ export async function createStudio(studioData, options = {}) {
  * Fetches studios owned by the currently authenticated user.
  */
 export async function getMyStudios(options = {}) {
-  const result = await fetchApi("/api/studios/mine", {
+  const result = await fetchMarketplaceApi("/studios/mine", {
     credentials: "include",
     ...options,
   });
@@ -342,8 +366,8 @@ export async function getMyStudios(options = {}) {
  * Updates an existing studio. Requires ownership (credentials included).
  */
 export async function updateStudio(idOrSlug, studioData, options = {}) {
-  const result = await fetchApi(
-    `/api/studios/${encodeURIComponent(idOrSlug)}`,
+  const result = await fetchMarketplaceApi(
+    `/studios/${encodeURIComponent(idOrSlug)}`,
     {
       method: "PATCH",
       headers: {
@@ -365,7 +389,7 @@ export async function updateStudio(idOrSlug, studioData, options = {}) {
 }
 
 export async function createBooking(bookingData, options = {}) {
-  const result = await fetchApi("/api/bookings", {
+  const result = await fetchMarketplaceApi("/bookings", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -384,7 +408,7 @@ export async function createBooking(bookingData, options = {}) {
 }
 
 export async function getMyBookings(options = {}) {
-  const result = await fetchApi("/api/bookings/mine", {
+  const result = await fetchMarketplaceApi("/bookings/mine", {
     credentials: "include",
     ...options,
   });
@@ -397,7 +421,7 @@ export async function getMyBookings(options = {}) {
 }
 
 export async function cancelBooking(bookingId, options = {}) {
-  const result = await fetchApi(`/api/bookings/${encodeURIComponent(bookingId)}/cancel`, {
+  const result = await fetchMarketplaceApi(`/bookings/${encodeURIComponent(bookingId)}/cancel`, {
     method: "PATCH",
     credentials: "include",
     ...options,

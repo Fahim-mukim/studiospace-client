@@ -38,8 +38,10 @@ Git histories, and deployments.
    ```
 
    Keep `NEXT_PUBLIC_API_BASE_URL` set to the Express API origin
-   (`http://localhost:5000` by default). It is only for marketplace HTTP APIs.
-   Never add a `NEXT_PUBLIC_` prefix to MongoDB or Better Auth secrets.
+   (`http://localhost:5000` by default) for public studio reads. Set the
+   server-only `SERVER_API_BASE_URL` to that same Express origin for protected
+   marketplace requests forwarded by the Next.js BFF. Never add a
+   `NEXT_PUBLIC_` prefix to MongoDB, Better Auth, or upstream API configuration.
 
 4. Configure and run the Express Server from its own checkout and environment.
    Then start the Client:
@@ -49,8 +51,9 @@ Git histories, and deployments.
    ```
 
    Open [http://localhost:3000](http://localhost:3000). Better Auth endpoints are
-   served by the Next.js application at `/api/auth`; marketplace requests continue
-   to use the separately configured Express API base URL.
+   served by the Next.js application at `/api/auth`. Protected marketplace
+   requests use the same-origin `/api/marketplace/*` BFF and are forwarded to
+   the separately configured Express API.
 
 ## Authentication
 
@@ -87,9 +90,20 @@ connections: Next.js owns the authentication collections, while Express owns
 marketplace data such as studios, bookings, and reviews. Express verifies the
 Client's JWT-backed session-data cookie (`better-auth.session_data`) using `jose`
 against the Next.js Client's remote JWKS endpoint (`/api/auth/jwks`). Express no
-longer maintains a local Better Auth instance or authentication endpoints. Note
-that direct browser-to-Express cross-origin cookie transport requires compatible
-domain configuration or a same-origin proxy; see the Server README for details.
+longer maintains a local Better Auth instance or authentication endpoints.
+
+The browser sends protected marketplace requests to the same-origin Next.js
+route `/api/marketplace/*`. This BFF allows only the Client's existing studio
+and booking endpoints, validates mutation `Origin` and JSON content type, and
+forwards only Better Auth's supported session-data cookie (including valid
+chunks) to the configured Express origin. It never forwards the opaque
+`session_token`, arbitrary browser cookies, Authorization headers, or
+client-supplied upstream URLs. Express remains responsible for verifying the
+session and authorizing the requested resource. Public studio reads continue to
+use `NEXT_PUBLIC_API_BASE_URL` directly; `SERVER_API_BASE_URL` is server-only and
+controls the BFF upstream. Authenticated browser-to-Express behavior still
+requires the deployed Next.js URL, Better Auth origin, CORS, and Express JWKS
+configuration to agree.
 
 ### MongoDB integration test
 
@@ -117,11 +131,13 @@ production database.
 
 ## Marketplace and Express API
 
-The browser uses `NEXT_PUBLIC_API_BASE_URL` for Express marketplace requests
-(default: `http://localhost:5000`); it does not connect to MongoDB. Configure
-that public base URL independently from the Client's server-only authentication
-variables. Run the Express Server from its own checkout and configure its
-`CLIENT_URL`, `CLIENT_AUTH_URL`, and MongoDB variables there.
+The browser uses `NEXT_PUBLIC_API_BASE_URL` for public Express marketplace
+reads (default: `http://localhost:5000`); protected requests use the Next.js
+same-origin BFF, which forwards to the server-only `SERVER_API_BASE_URL`
+(default: `http://localhost:5000`). The browser never connects to MongoDB.
+Configure both API origins independently from the Client's server-only
+authentication variables. Run the Express Server from its own checkout and
+configure its `CLIENT_URL`, `CLIENT_AUTH_URL`, and MongoDB variables there.
 
 - The homepage requests up to six newest studios from
   `GET /api/studios?limit=6&sort=newest`. It shows loading, API-error, and
